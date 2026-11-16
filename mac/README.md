@@ -24,6 +24,7 @@ AI 프로그램이 일하는 동안 Mac을 깨워 두고, 일이 끝나면 화�
    ./build.sh
    ```
 3. 만들어진 `build/AI Watchdog.app`을 `/Applications` 폴더로 옮깁니다.
+4. 나눠 줄 DMG가 필요하면 `./make-dmg.sh` → `build/AI-Watchdog-mac.dmg` (앱 아이콘이 붙은 DMG)
 
 `mac/` 아래를 고쳐 main 브랜치에 올리면 GitHub Actions가 자동으로 빌드해 Releases에 새 버전을 올립니다.
 
