@@ -10,6 +10,10 @@ final class Panel: NSPanel {
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler, WKNavigationDelegate, UNUserNotificationCenterDelegate {
     private let power = Power()
+    private let fan = FanControl()
+    private let tokens = TokenScanner()
+    private var slowTick = 0
+    private var slow: [String: Any] = [:]
     private var statusItem: NSStatusItem!
     private var panel: Panel!
     private var web: WKWebView!
@@ -91,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         openWindow(); return true          // 이미 켜져 있을 때 앱을 다시 열면 창을 보여 줌
     }
 
-    func applicationWillTerminate(_ note: Notification) { power.release() }
+    func applicationWillTerminate(_ note: Notification) { power.release(); fan.allAuto() }
 
     // 창이 열려 있어 앱이 활성 상태여도 알림 배너를 보여 줌
     func userNotificationCenter(_ c: UNUserNotificationCenter, willPresent n: UNNotification,
@@ -108,6 +112,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         ]
         if let d = try? Data(contentsOf: settingsURL), let s = try? JSONSerialization.jsonObject(with: d) { data["settings"] = s }
         call("AW.init", data)
+        // 확인용: open "AI Watchdog.app" --args -startView tok  (main|sys|fan|tok)
+        if let v = UserDefaults.standard.string(forKey: "startView") { call("AW.show", v) }
+        // 확인용: --args -debugJS "자바스크립트" — 3초 뒤 화면에서 실행하고 결과를 debug.log 에 남김
+        if let js = UserDefaults.standard.string(forKey: "debugJS") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                self?.web.evaluateJavaScript(js) { r, e in self?.debugLog("debugJS → \(e.map { "\($0)" } ?? String(describing: r ?? "nil"))") }
+            }
+        }
         ready = true
         tick()
         if !startHidden { openWindow() }
@@ -128,6 +140,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         } else {
             s["gpuPct"] = "skip"
         }
+        // 팬·온도는 팬 커브 계산에 필요해서 항상 잼 (가벼움)
+        s["fans"] = Sensors.fans()
+        s["temps"] = Sensors.temperatures()
+        s["fanHelper"] = fan.status
+        if panel.isVisible {
+            if slowTick % 5 == 0 {      // 배터리·저장 공간·네트워크 이름은 5초마다
+                slow["battery"] = Sensors.battery() ?? NSNull()
+                slow["disk"] = Sensors.storage()
+                slow["net"] = Sensors.primaryNetwork()
+            }
+            slowTick += 1
+            let io = Sensors.networkInOut()
+            var sys = slow
+            sys["rx"] = io.rx; sys["tx"] = io.tx
+            if let c = Probe.cpuSplit { sys["cpuUser"] = c.user; sys["cpuSys"] = c.sys }
+            sys["memCompressed"] = Sensors.compressedMemory()
+            sys["gpuMem"] = Sensors.gpuMemory() ?? NSNull()
+            s["sys"] = sys
+        } else {
+            slowTick = 0
+        }
+        fan.heartbeat()
         if wokeUp { s["wake"] = true; wokeUp = false }
         call("AW.tick", s)
     }
@@ -183,6 +217,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             Power.notify(title: m["title"] as? String ?? "AI Watchdog", body: m["body"] as? String ?? "")
         case "procs":
             call("AW.procList", Probe.pickList())
+        case "fan":
+            fan.apply(m["fans"] as? [[String: Any]] ?? [])
+        case "fanInstall", "fanRemove":
+            let err = cmd == "fanInstall" ? fan.install() : fan.remove()
+            debugLog("\(cmd): \(err ?? "ok") → \(fan.status)")
+            call("AW.fanResult", ["ok": err == nil, "error": err ?? "", "status": fan.status])
+        case "tokens":
+            tokens.scan { [weak self] rows in self?.call("AW.tokens", ["rows": rows]) }
+        case "jsError":
+            debugLog("JS error: " + (m["msg"] as? String ?? "?"))
         case "quit":
             quit()
         default:
@@ -235,7 +279,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     @objc private func wakeHour() { call("AW.wake", 60) }
     @objc private func wakeOff() { call("AW.wake", 0) }
-    @objc private func quit() { power.release(); NSApp.terminate(nil) }
+    @objc private func quit() { power.release(); fan.allAuto(); NSApp.terminate(nil) }
 
     // ---------------------------------------------------------------- 파일
     private func loadLangs() -> [Any] {
@@ -267,6 +311,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             h.seekToEndOfFile(); h.write(data); try? h.close()
         } else {
             try? data.write(to: sessionsURL)
+        }
+    }
+
+    /// 문제를 찾을 때 보는 짧은 기록: ~/Library/Application Support/AIWatchdog/debug.log (200KB 넘으면 새로 시작)
+    func debugLog(_ text: String) {
+        let url = supportDir.appendingPathComponent("debug.log")
+        let line = "\(ISO8601DateFormatter().string(from: Date())) \(text)\n"
+        guard let data = line.data(using: .utf8) else { return }
+        let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int) ?? 0
+        if size < 200_000, let h = try? FileHandle(forWritingTo: url) {
+            h.seekToEndOfFile(); h.write(data); try? h.close()
+        } else {
+            try? data.write(to: url)
         }
     }
 

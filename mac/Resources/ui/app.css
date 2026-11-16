@@ -138,3 +138,132 @@ select.field{width:auto;min-width:180px;padding:7px 10px}
 
 #footer{font-size:11.5px;color:var(--foot);margin:16px 22px;white-space:pre-line;line-height:1.45}
 #footer.err{color:var(--err)}
+
+/* ================================================================ 탭 · 시스템 · 팬 · 토큰 */
+.num{font-family:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,sans-serif;font-variant-numeric:tabular-nums}
+
+#tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin:2px 18px 6px;padding:3px;background:var(--seg);border-radius:11px}
+#tabs button{padding:6px 0;border-radius:8px;color:var(--muted);font-size:12.5px}
+#tabs button:hover{color:var(--ink)}
+#tabs button[aria-selected=true]{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(31,38,51,.08)}
+
+/* 온도 표시: 낮음 moon · 보통 잉크 · 높음 lamp · 위험 rose */
+.temp{font-family:ui-rounded,"SF Pro Rounded",-apple-system,sans-serif;font-variant-numeric:tabular-nums;font-size:12px;font-weight:600;
+  padding:2px 7px;border-radius:7px;background:var(--badge);color:var(--muted)}
+.temp:empty{display:none}
+.t-cool{color:var(--moon)} .t-mild{color:var(--ink)} .t-warm{color:var(--lamp)} .t-hot{color:var(--rose)}
+.temp.t-warm{background:var(--warm)} .temp.t-hot{background:rgba(218,84,66,.16)} .temp.t-cool{background:var(--cool)}
+
+/* 시스템: 조용한 계기 목록 */
+#vSys{margin:0 22px}
+.read{padding:12px 0 13px;border-top:1px solid var(--hr)}
+.read:first-child{border-top:0;padding-top:6px}
+.rh{display:flex;align-items:baseline;gap:10px}
+.rl{width:74px;flex:none;color:var(--muted);font-size:12px}
+.rv{flex:1;font-size:22px;font-weight:500;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rh .temp{align-self:center}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;margin:5px 0 0 84px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.facts:empty{display:none}
+.facts span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.read .bar,.read .spark{display:block;margin:8px 0 0 84px;width:calc(100% - 84px)}
+.bar{height:5px;border-radius:3px;background:var(--track);overflow:hidden}
+.bar s{display:block;height:100%;width:0;background:var(--bar);border-radius:3px;transition:width .4s}
+.bar.hot s{background:var(--rose)} .bar.lit s{background:var(--lamp)}
+.spark{height:30px;overflow:visible}
+.spark .sa{fill:rgba(124,135,155,.5);stroke:none}
+.spark .sb{fill:rgba(85,102,212,.45);stroke:none}
+
+/* 팬: 쌍둥이 고리 — 메인 고리를 되풀이하는 이 앱의 상징 */
+#vFan{margin:0 22px}
+#fanTwins{display:flex;justify-content:center;gap:26px;margin-top:4px}
+.dial{display:flex;flex-direction:column;align-items:center;width:136px}
+.dial-ring{position:relative;width:128px;height:128px}
+.dial-ring svg.r{width:128px;height:128px;stroke-width:9}
+.dial-ring .track{stroke:var(--track)}
+.dial-ring .arc{stroke:var(--bar);transition:stroke-dasharray .6s,stroke .3s}
+.dial.manual .arc{stroke:var(--lamp)}
+.dial-ring svg.blade{position:absolute;left:50%;top:22px;width:26px;height:26px;margin-left:-13px;color:var(--hint);stroke-width:1.5;
+  animation:spin var(--spin,0s) linear infinite;animation-play-state:var(--play,paused)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.dial-ring svg.blade{animation:none}}
+.dial-ring .val{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:16px}
+.dial-ring .val b{font-size:26px;font-weight:500;line-height:1}
+.dial-ring .val small{font-size:11px;color:var(--muted);margin-top:3px}
+.dial>span{font-size:12px;margin-top:4px;font-weight:600}
+.dial>small{font-size:11px;color:var(--hint);font-variant-numeric:tabular-nums}
+
+#heatRow{display:grid;grid-template-columns:repeat(3,1fr);margin:14px 0 0;border-top:1px solid var(--hr);border-bottom:1px solid var(--hr)}
+#heatRow div{display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:1px}
+#heatRow div+div{border-left:1px solid var(--hr)}
+#heatRow span{font-size:11.5px;color:var(--muted)}
+#heatRow b{font-size:17px;font-weight:600}
+
+.callout{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;line-height:1.45}
+.callout p{margin:4px 0 0;color:var(--muted)}
+.callout .solid.ink{margin-top:12px}
+.solid.ink{background:var(--swon);font-size:13px;padding:8px 18px;border-radius:10px;margin-top:0}
+.solid:disabled{opacity:.5;cursor:default}
+
+#fanCtl{margin-top:14px}
+#fanCtl .seg button{font-size:12.5px}
+#fanFixed,#fanCurve{margin-top:12px}
+#fanFixed .switch{font-size:12.5px}
+.slider{display:grid;grid-template-columns:62px 1fr 64px;align-items:center;gap:10px;margin-top:10px;font-size:12px}
+.slider span{color:var(--muted)} .slider b{text-align:right;font-weight:600}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:5px;border-radius:3px;margin:0;
+  background:linear-gradient(to right,var(--lamp) var(--fill,0%),var(--track) var(--fill,0%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--knob);
+  border:1px solid var(--line);box-shadow:0 1px 3px rgba(31,38,51,.25);cursor:pointer}
+input[type=range]:focus-visible{outline:2px solid var(--moon);outline-offset:3px}
+
+#curve{width:100%;height:150px;display:block;touch-action:none}
+#curve .grid{stroke:var(--hr);stroke-width:1}
+#curve .axis{fill:var(--hint);stroke:none;font-size:9.5px;font-family:ui-rounded,-apple-system,sans-serif}
+#curve .line{fill:none;stroke:var(--lamp);stroke-width:2}
+#curve .fill{fill:rgba(233,154,44,.12);stroke:none}
+#curve .nowdot{stroke:none}
+#curve .pt{fill:var(--card);stroke:var(--lamp);stroke-width:2;cursor:grab}
+#curve .pt:focus{outline:none;stroke:var(--moon);stroke-width:3}
+#curve .now{stroke:var(--muted);stroke-dasharray:3 3}
+#curve .nowdot{fill:var(--ink)}
+#curveNow{margin-top:4px}
+#fanAutoText{margin-top:10px}
+.fanApply{margin-top:14px}
+#fanState{flex:1}
+
+/* 토큰 */
+#vTok{margin:0 22px}
+#tokHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:4px;flex-wrap:wrap}
+#tokHead b{font-size:30px;font-weight:600;letter-spacing:-.01em}
+#tokHead span{color:var(--muted)}
+#tokCost{margin:0;color:var(--muted);font-size:13px}
+#tokStats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;border-top:1px solid var(--hr);border-bottom:1px solid var(--hr)}
+#tokStats div{padding:8px 0;display:flex;flex-direction:column;gap:1px}
+#tokStats div+div{padding-left:12px;border-left:1px solid var(--hr)}
+#tokStats span{font-size:11.5px;color:var(--muted)}
+#tokStats b{font-size:16px;font-weight:600}
+#heat{margin-top:14px}
+#heatMonths{position:relative;height:14px;margin-left:24px;font-size:10.5px;color:var(--hint)}
+#heatMonths span{position:absolute;top:0}
+#heatBody{display:flex;gap:6px}
+#heatWd{display:grid;grid-template-rows:repeat(7,13px);gap:3px;width:18px;font-size:9.5px;color:var(--hint);line-height:13px}
+#heatGrid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,13px);grid-auto-columns:13px;gap:3px}
+#heatGrid button{width:13px;height:13px;border-radius:3px;background:var(--track);padding:0}
+#heatGrid button.l1{background:rgba(233,154,44,.28)}
+#heatGrid button.l2{background:rgba(233,154,44,.52)}
+#heatGrid button.l3{background:rgba(233,154,44,.78)}
+#heatGrid button.l4{background:var(--lamp)}
+#heatGrid button.fut{visibility:hidden}
+#heatGrid button.sel{outline:2px solid var(--ink);outline-offset:1px}
+#heatGrid button:focus-visible{outline:2px solid var(--moon);outline-offset:1px}
+#heatInfo{margin:8px 0 0;font-size:12px;color:var(--muted);min-height:16px}
+.tokModelsH{margin-top:16px;font-size:12px;color:var(--muted)}
+#tokBar{display:flex;height:8px;border-radius:4px;overflow:hidden;margin-top:8px;background:var(--track);gap:2px}
+#tokBar i{display:block;height:100%}
+#tokModels{margin-top:6px}
+.mrow{display:grid;grid-template-columns:12px 1fr auto 64px;align-items:center;gap:8px;padding:5px 0;font-size:12.5px}
+.mrow .dot{width:8px;height:8px;border-radius:50%}
+.mrow b{font-weight:500;text-align:right}
+.mrow small{color:var(--muted);text-align:right;font-size:12px}
+#vTok>.hint{margin-top:12px}
+.tokFoot{margin-top:6px}

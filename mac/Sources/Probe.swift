@@ -60,6 +60,9 @@ enum Probe {
 
     // 전체 CPU 사용률: 직전 호출과의 틱 차이
     private static var prevCpu: (busy: UInt64, total: UInt64)?
+    private static var prevSplit: (user: UInt64, sys: UInt64)?
+    /// 직전 cpuPercent() 호출 기준 (사용자 %, 시스템 %)
+    private(set) static var cpuSplit: (user: Double, sys: Double)?
     static func cpuPercent() -> Double? {
         var load = host_cpu_load_info()
         var count = mach_msg_type_number_t(MemoryLayout<host_cpu_load_info>.size / MemoryLayout<integer_t>.size)
@@ -72,9 +75,14 @@ enum Probe {
         let t = load.cpu_ticks
         let user = UInt64(t.0), sys = UInt64(t.1), idle = UInt64(t.2), nice = UInt64(t.3)
         let busy = user + sys + nice, total = busy + idle
-        defer { prevCpu = (busy, total) }
+        defer { prevCpu = (busy, total); prevSplit = (user + nice, sys) }
         guard let p = prevCpu, total > p.total else { return nil }
-        return Double(busy - p.busy) * 100 / Double(total - p.total)
+        if let s = prevSplit {
+            let dt = Double(total - p.total)
+            // 카운터가 32비트라 오래 켜 두면 한 바퀴 돌 수 있음 → 음수면 0
+            cpuSplit = (max(0, Double(user + nice) - Double(s.user)) * 100 / dt, max(0, Double(sys) - Double(s.sys)) * 100 / dt)
+        }
+        return max(0, Double(busy) - Double(p.busy)) * 100 / Double(total - p.total)
     }
 
     /// [전체 바이트, 사용 중 바이트] (활성 상태 보기의 "사용된 메모리"와 같은 방식)

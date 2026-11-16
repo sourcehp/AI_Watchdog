@@ -48,9 +48,19 @@ ps -axco command | sort -u | grep -i 이름일부
 그다음 "실행 중인 프로그램에서 추가"로 그 이름을 추가하면 됩니다.
 `Claude Helper (Renderer)` 같은 보조 프로세스는 자동으로 본 앱에 합산됩니다.
 
+## 시스템 · 팬 · 토큰 탭
+- **시스템**: CPU(사용자·시스템·온도), GPU, 메모리, 저장 공간, 배터리(성능 최대치·충전 횟수·전력), 네트워크.
+- **팬**: 팬 속도와 CPU·GPU·배터리 온도. 자동 / 고정 / 온도 따라(커브) 중에 골라 **적용**합니다.
+  처음 한 번 관리자 암호로 작은 **팬 도우미**를 설치해야 바꿀 수 있어요(보기만은 설치 없이 됨).
+  AI Watchdog가 꺼지거나 멈추면 15초 안에 팬은 자동으로 돌아갑니다. 도우미는 설정 → 팬 도우미 지우기로 지웁니다.
+- **토큰**: 이 Mac의 Claude Code 기록(`~/.claude/projects`)을 세어 총 토큰, API 정가로 친 금액, 날짜별 히트맵, 모델별 사용량을 보여 줍니다.
+  구독 요금과는 다른 "API로 썼다면" 금액이에요.
+
 ## 파일 위치
 - 설정: `~/Library/Application Support/AIWatchdog/settings.json`
 - 작업 기록: `~/Library/Application Support/AIWatchdog/sessions.csv`
+- 문제 기록: `~/Library/Application Support/AIWatchdog/debug.log` (화면 오류, 팬 도우미 설치 결과)
+- 팬 도우미: `/Library/PrivilegedHelperTools/com.nik.aiwatchdog.fanhelper`, `/Library/LaunchDaemons/com.nik.aiwatchdog.fanhelper.plist`
 - 언어 추가: `~/Library/Application Support/AIWatchdog/lang/` 에 `xx.json`을 넣고 앱을 다시 켜면 목록에 나타납니다.
   (형식은 `Resources/lang/en.json`과 같고, 빠진 문구는 영어로 표시됩니다.)
 

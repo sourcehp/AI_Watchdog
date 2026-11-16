@@ -3,6 +3,8 @@
 import fs from 'node:fs';
 const src = new URL('./win-lang/', import.meta.url);
 const out = new URL('../Resources/lang/', import.meta.url);
+// 맥 전용 새 문구: tools/mac-extra.json { 언어코드: { 키: 문구 } }
+const EXTRA = JSON.parse(fs.readFileSync(new URL('./mac-extra.json', import.meta.url), 'utf8'));
 
 // 맥에 없는 기능(최대 절전, 프로세스별 GPU, 창 내리기, 중복 실행 질문)
 const DROP = ['x.tip.min', 'act.word.4', 'act.phrase.4', 'hero.pending.4', 'rest.auto.4', 'err.hibOff', 'err.hibFail',
@@ -102,6 +104,7 @@ for (const file of fs.readdirSync(src).filter(f => f.endsWith('.json'))) {
   const strings = {};
   for (const [k, v] of Object.entries(doc.strings)) if (!DROP.includes(k)) strings[k] = toMac(doc.code, v);
   Object.assign(strings, O[doc.code] || O.en);
+  Object.assign(strings, EXTRA.en, EXTRA[doc.code] || {});     // 맥에서 새로 생긴 기능(시스템·팬·토큰)
   const outDoc = { code: doc.code, name: doc.name, order: doc.order, culture: doc.culture, strings };
   fs.writeFileSync(new URL(file, out), JSON.stringify(outDoc, null, 1) + '\n');
   console.log('wrote', file, Object.keys(strings).length, 'strings');
