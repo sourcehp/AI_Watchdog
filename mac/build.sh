@@ -26,6 +26,16 @@ strip -x "$APP/Contents/MacOS/AIWatchdog"
 rm -f build/AIWatchdog-*
 
 cp Info.plist "$APP/Contents/"
+
+echo "▶ 앱 아이콘"
+ICONSET=build/AppIcon.iconset
+mkdir -p "$ICONSET"
+for s in 16 32 128 256 512; do
+  sips -z $s $s Resources/icon/AppIcon-1024.png --out "$ICONSET/icon_${s}x${s}.png" >/dev/null
+  sips -z $((s*2)) $((s*2)) Resources/icon/AppIcon-1024.png --out "$ICONSET/icon_${s}x${s}@2x.png" >/dev/null
+done
+iconutil -c icns "$ICONSET" -o "$APP/Contents/Resources/AppIcon.icns"
+rm -rf "$ICONSET"
 mkdir -p "$APP/Contents/Resources/ui" "$APP/Contents/Resources/lang"
 cp Resources/ui/index.html Resources/ui/app.css Resources/ui/app.js Resources/ui/logic.js Resources/ui/i18n.js "$APP/Contents/Resources/ui/"
 cp Resources/lang/*.json "$APP/Contents/Resources/lang/"
