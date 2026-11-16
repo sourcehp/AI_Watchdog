@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>AI Watchdog</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div id="card">
+  <header id="titlebar">
+    <span id="title">AI Watchdog</span>
+    <div class="chrome">
+      <button id="btnPower" class="ic" data-tip="x.tip.power"><svg><use href="#i-power"/></svg></button>
+      <button id="btnSettings" class="ic" data-tip="x.tip.settings"><svg><use href="#i-gear"/></svg></button>
+      <button id="btnClose" class="ic" data-tip="x.tip.close"><svg><use href="#i-x"/></svg></button>
+    </div>
+    <div id="powerPop" class="pop" hidden>
+      <div class="pop-h" data-t="x.now"></div>
+      <button class="item" data-act="screen"><svg><use href="#i-screen"/></svg><span data-t="act.word.1"></span></button>
+      <button class="item" data-act="sleep"><svg><use href="#i-moon"/></svg><span data-t="act.word.2"></span></button>
+      <button class="item" data-act="shutdown"><svg><use href="#i-power"/></svg><span data-t="act.word.3"></span></button>
+      <hr>
+      <div class="pop-h lamp"><svg><use href="#i-sun"/></svg><span data-t="x.wake"></span></div>
+      <button class="item" data-wake="30" data-t="x.30m"></button>
+      <button class="item" data-wake="60" data-t="x.1h"></button>
+      <button class="item" data-wake="120" data-t="x.2h"></button>
+      <button class="item" id="pmWakeOff" data-wake="0" data-t="x.wakeoff"></button>
+    </div>
+  </header>
+
+  <!-- 메인 -->
+  <section id="vMain">
+    <div id="hero">
+      <svg id="ring" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="82" class="track"/>
+        <circle cx="100" cy="100" r="82" id="arc" transform="rotate(-90 100 100)"/>
+      </svg>
+      <div id="glow"></div>
+      <div class="hero-text"><div id="big"></div><div id="small"></div></div>
+    </div>
+    <div id="stTitle"></div>
+    <div id="stDesc"></div>
+    <div class="center">
+      <button id="btnCancel" class="solid" data-t="x.cancel" hidden></button>
+      <button id="btnEndWake" class="ghost" data-t="x.wakeoff" hidden></button>
+    </div>
+
+    <div id="meters">
+      <div class="meter" id="mCpu"><label>CPU</label><b>-</b><i><s></s></i></div>
+      <div class="meter" id="mRam"><label data-t="x.memory"></label><b>-</b><i><s></s></i></div>
+      <div class="meter" id="mGpu"><label>GPU</label><b>-</b><i><s></s></i></div>
+      <div class="meter" id="mNet"><label data-t="x.network"></label><b>-</b><i><s></s></i></div>
+    </div>
+
+    <div class="row-h"><span><svg><use href="#i-eye"/></svg><span data-t="x.watched"></span></span>
+      <button id="btnManage" class="link" data-t="x.manage"></button></div>
+    <div id="agents" class="box"></div>
+
+    <label class="switch big" style="margin-top:22px"><span data-t="x.whenDone"></span><input type="checkbox" data-k="auto"><i></i></label>
+    <div id="autoPanel">
+      <div class="flow">
+        <div class="flow-end"><svg class="lamp"><use href="#i-spark"/></svg><span data-t="x.workEnd"></span></div>
+        <div class="flow-line"></div>
+        <div class="stepper pill" data-tip="x.waitTip">
+          <button class="round" data-step="idleMin" data-dir="-1">−</button><b id="idleVal"></b>
+          <button class="round" data-step="idleMin" data-dir="1">+</button>
+        </div>
+        <div class="flow-end"><svg class="moon" id="flowIcon"><use href="#i-moon"/></svg><span id="flowText"></span></div>
+      </div>
+      <div class="tiles">
+        <button class="tile" data-action="1"><svg><use href="#i-screen"/></svg><span data-t="act.word.1"></span></button>
+        <button class="tile" data-action="2"><svg><use href="#i-moon"/></svg><span data-t="act.word.2"></span></button>
+        <button class="tile" data-action="3"><svg><use href="#i-power"/></svg><span data-t="act.word.3"></span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 감시 대상 -->
+  <section id="vTargets" hidden>
+    <p class="hint" data-t="x.targetsIntro"></p>
+    <div id="targets" class="box scroll"></div>
+    <button id="btnPick" class="ghost wide" data-t="x.addRunning"></button>
+    <div id="picker" hidden>
+      <div class="lbl" data-t="x.findByName"></div>
+      <input id="search" class="field" type="search" autocomplete="off">
+      <div id="procs" class="box scroll list"></div>
+      <div class="row-h"><span id="pickHint" class="hint" data-t="x.pickHint"></span><button id="btnAdd" class="ghost" data-t="x.add"></button></div>
+    </div>
+  </section>
+
+  <!-- 설정 -->
+  <section id="vSettings" class="scroll" hidden>
+    <div class="sh"><span class="badge"><svg><use href="#i-globe"/></svg></span><div><b id="langTitle"></b><p class="hint" data-t="lang.hint"></p></div></div>
+    <div class="indent"><select id="langSel" class="field"></select></div>
+
+    <div class="sh"><span class="badge"><svg><use href="#i-theme"/></svg></span><div><b data-t="x.appearance"></b><p class="hint" data-t="x.appearanceHint"></p></div></div>
+    <div class="indent seg" id="themeSeg">
+      <button data-theme="light" data-t="theme.light"></button><button data-theme="dark" data-t="theme.dark"></button><button data-theme="system" data-t="theme.system"></button>
+    </div>
+
+    <label class="switch sh"><span class="badge warm"><svg class="lamp"><use href="#i-sun"/></svg></span><div><b data-t="x.sAwake"></b><p class="hint" data-t="x.sAwakeHint"></p></div><input type="checkbox" data-k="awake"><i></i></label>
+    <label class="switch indent" id="swDisplay"><div><span data-t="x.display"></span><p class="hint" data-t="x.displayHint"></p></div><input type="checkbox" data-k="display"><i></i></label>
+
+    <div class="sh"><span class="badge cool"><svg class="moon"><use href="#i-spark"/></svg></span><div><b data-t="x.sAfter"></b><p class="hint" data-t="x.sAfterHint"></p></div></div>
+    <label class="switch indent"><div><span data-t="x.user"></span><p class="hint" data-t="x.userHint"></p></div><input type="checkbox" data-k="userIdle"><i></i></label>
+
+    <div class="sh"><span class="badge"><svg><use href="#i-eye"/></svg></span><div><b data-t="x.detect"></b><p class="hint" data-t="x.detectHint"></p></div></div>
+    <div class="indent row-h"><span data-t="x.cpuTh"></span><div class="stepper"><button data-step="cpuTh" data-dir="-1">−</button><b id="cpuVal"></b><button data-step="cpuTh" data-dir="1">+</button></div></div>
+    <div class="indent row-h"><span data-t="x.grace"></span><div class="stepper"><button data-step="graceSec" data-dir="-1">−</button><b id="graceVal"></b><button data-step="graceSec" data-dir="1">+</button></div></div>
+    <p class="hint indent" data-t="x.cpuHint"></p>
+
+    <div class="sh"><span class="badge"><svg><use href="#i-tune"/></svg></span><div><b data-t="x.display2"></b></div></div>
+    <label class="switch indent"><div><span data-t="x.notify"></span><p class="hint" data-t="x.notifyHint"></p></div><input type="checkbox" data-k="notify"><i></i></label>
+    <label class="switch indent"><div><span data-t="x.meters"></span><p class="hint" data-t="x.metersHint"></p></div><input type="checkbox" data-k="meters"><i></i></label>
+    <label class="switch indent"><div><span data-t="x.startup"></span><p class="hint" data-t="x.startupHint"></p></div><input type="checkbox" data-k="startup"><i></i></label>
+  </section>
+
+  <footer id="footer"></footer>
+</div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-sun" viewBox="0 0 24 24"><path d="M8,12 A4,4 0 1 1 16,12 A4,4 0 1 1 8,12 Z M12,2.5 V4.5 M12,19.5 V21.5 M2.5,12 H4.5 M19.5,12 H21.5 M5.3,5.3 L6.7,6.7 M17.3,17.3 L18.7,18.7 M5.3,18.7 L6.7,17.3 M17.3,6.7 L18.7,5.3"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M19.5,14.8 A8,8 0 1 1 9.2,4.5 A6.3,6.3 0 0 0 19.5,14.8 Z"/></symbol>
+    <symbol id="i-power" viewBox="0 0 24 24"><path d="M12,3 V11 M7,6.4 A7.6,7.6 0 1 0 17,6.4"/></symbol>
+    <symbol id="i-screen" viewBox="0 0 24 24"><path d="M3.5,5 H20.5 V16 H3.5 Z M9,20 H15 M12,16 V20 M3,3.5 L21,18.5"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5,12 C5,7 8.5,5 12,5 C15.5,5 19,7 21.5,12 C19,17 15.5,19 12,19 C8.5,19 5,17 2.5,12 Z M9.5,12 A2.5,2.5 0 1 1 14.5,12 A2.5,2.5 0 1 1 9.5,12 Z"/></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12,3 C12.6,8.2 15.8,11.4 21,12 C15.8,12.6 12.6,15.8 12,21 C11.4,15.8 8.2,12.6 3,12 C8.2,11.4 11.4,8.2 12,3 Z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M9,12 A3,3 0 1 1 15,12 A3,3 0 1 1 9,12 Z M12,3 V5.5 M12,18.5 V21 M3,12 H5.5 M18.5,12 H21 M5.6,5.6 L7.4,7.4 M16.6,16.6 L18.4,18.4 M5.6,18.4 L7.4,16.6 M16.6,7.4 L18.4,5.6"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15,5 L8,12 L15,19"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6,6 L18,18 M18,6 L6,18"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M5,7 H19 M10,7 V4.5 H14 V7 M7,7 L8,20 H16 L17,7"/></symbol>
+    <symbol id="i-tune" viewBox="0 0 24 24"><path d="M4,7 H14 M18,7 H20 M4,17 H6 M10,17 H20 M14,5 V9 M18,5 V9 M6,15 V19 M10,15 V19"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><path d="M3.5,12 A8.5,8.5 0 1 1 20.5,12 A8.5,8.5 0 1 1 3.5,12 Z M3.5,12 H20.5 M12,3.5 C9,6.5 9,17.5 12,20.5 C15,17.5 15,6.5 12,3.5 Z"/></symbol>
+    <symbol id="i-theme" viewBox="0 0 24 24"><path d="M3.5,12 A8.5,8.5 0 1 1 20.5,12 A8.5,8.5 0 1 1 3.5,12 Z M12,3.5 V20.5 M12,7 H16.5 M12,11 H19.5 M12,15 H18"/></symbol>
+  </defs>
+</svg>
+<script src="i18n.js"></script>
+<script src="logic.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

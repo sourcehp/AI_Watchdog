@@ -1,0 +1,53 @@
+# 맥용 AI Watchdog를 GitHub의 맥 서버에서 빌드해 Releases 에 올림
+name: macOS build
+
+on:
+  push:
+    branches: [main]
+    paths: ['mac/**', '.github/workflows/mac-build.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: mac
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 판정 로직·언어 파일 테스트
+        run: node --test test/*.test.mjs
+
+      - name: 앱 빌드
+        run: ./build.sh
+
+      - name: 압축과 DMG 만들기
+        run: |
+          APP="build/AI Watchdog.app"
+          ditto -c -k --keepParent "$APP" build/AI-Watchdog-mac.zip
+          mkdir -p build/dmg
+          cp -R "$APP" build/dmg/
+          ln -s /Applications build/dmg/Applications
+          hdiutil create -volname "AI Watchdog" -srcfolder build/dmg -ov -format UDZO build/AI-Watchdog-mac.dmg
+          ls -lh build/*.zip build/*.dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: AI-Watchdog-mac
+          path: |
+            mac/build/AI-Watchdog-mac.zip
+            mac/build/AI-Watchdog-mac.dmg
+
+      - name: Releases 에 올리기
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="mac-v1.0.${{ github.run_number }}"
+          gh release create "$TAG" build/AI-Watchdog-mac.dmg build/AI-Watchdog-mac.zip \
+            --title "AI Watchdog for macOS 1.0 (build ${{ github.run_number }})" \
+            --notes "DMG를 열고 AI Watchdog를 Applications 폴더로 끌어다 놓으세요. 처음 열 때 경고가 나오면 시스템 설정 → 개인정보 보호 및 보안 → '그래도 열기'를 누르세요." \
+            --latest
