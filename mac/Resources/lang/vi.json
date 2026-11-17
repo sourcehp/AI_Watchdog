@@ -277,6 +277,18 @@
   "tok.counted": "Đã đếm {0} trước",
   "tok.empty": "Chưa có nhật ký Claude Code. Khi bạn dùng Claude Code, số liệu sẽ hiện ở đây.",
   "agent.ai": "AI đang làm việc",
-  "agent.aiN": "AI đang làm việc ({0} cuộc trò chuyện)"
+  "agent.aiN": "AI đang làm việc ({0} cuộc trò chuyện)",
+  "upd.title": "Cập nhật",
+  "upd.current": "Phiên bản {0}",
+  "upd.check": "Kiểm tra cập nhật",
+  "upd.checking": "Đang kiểm tra…",
+  "upd.latest": "Bạn đang dùng phiên bản mới nhất.",
+  "upd.available": "Có phiên bản mới: {0}",
+  "upd.install": "Cập nhật ngay",
+  "upd.downloading": "Đang tải xuống…",
+  "upd.installing": "Đang cài đặt… AI Watchdog sẽ mở lại ngay.",
+  "upd.failed": "Cập nhật chưa xong: {0}",
+  "upd.notWritable": "Không thể thay ứng dụng trong thư mục này. Hãy chuyển vào thư mục Ứng dụng rồi thử lại, hoặc tải từ trang tải xuống.",
+  "upd.page": "Mở trang tải xuống"
  }
 }

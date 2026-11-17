@@ -277,6 +277,18 @@
   "tok.counted": "Contado hace {0}",
   "tok.empty": "Aún no hay registros de Claude Code. Aparecerán aquí cuando lo uses.",
   "agent.ai": "IA trabajando",
-  "agent.aiN": "IA trabajando ({0} chats)"
+  "agent.aiN": "IA trabajando ({0} chats)",
+  "upd.title": "Actualizaciones",
+  "upd.current": "Versión {0}",
+  "upd.check": "Buscar actualizaciones",
+  "upd.checking": "Buscando…",
+  "upd.latest": "Tienes la última versión.",
+  "upd.available": "Hay una nueva versión: {0}",
+  "upd.install": "Actualizar ahora",
+  "upd.downloading": "Descargando…",
+  "upd.installing": "Instalando… AI Watchdog se volverá a abrir enseguida.",
+  "upd.failed": "La actualización no terminó: {0}",
+  "upd.notWritable": "AI Watchdog no puede reemplazarse en esta carpeta. Muévelo a Aplicaciones e inténtalo de nuevo, o descárgalo desde la página.",
+  "upd.page": "Abrir página de descarga"
  }
 }

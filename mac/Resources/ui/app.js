@@ -113,6 +113,7 @@ function applyLang(code) {
   document.documentElement.lang = code;
   $$('[data-t]').forEach(e => { e.textContent = T(e.dataset.t); });
   $$('[data-tip]').forEach(e => { e.title = T(e.dataset.tip); });
+  $('#updVersion').textContent = F('upd.current', appVersion || '-');   // 언어가 정해진 뒤에 채움
   $('#langTitle').textContent = code === 'en' ? 'Language' : T('lang.label') + ' (Language)';
   const sel = $('#langSel');
   sel.innerHTML = '';
@@ -390,7 +391,7 @@ function wire() {
     const i = (TABS.indexOf(tab) + (e.key === 'ArrowRight' ? 1 : 3)) % 4;
     showView(TABS[i]); render(); $(`#tabs [data-tab=${TABS[i]}]`).focus();
   });
-  wireFan(); wireTok();
+  wireFan(); wireTok(); wireUpdate();
   $('#btnManage').onclick = () => { showView('targets'); render(); };
   $('#btnPower').onclick = e => { e.stopPropagation(); $('#powerPop').hidden = !$('#powerPop').hidden; sync(); };
   document.addEventListener('click', e => { if (!e.target.closest('#powerPop')) $('#powerPop').hidden = true; });
@@ -815,6 +816,28 @@ function renderTokWhen() {
   $('#btnTokRefresh').disabled = tokBusy;
   if (tokRows && !tokBusy && clock() - tokAt > 60 && view === 'tok') askTokens(true);   // 보고 있으면 1분마다 새로
 }
+// ---------------------------------------------------------------- 업데이트 (설정 화면, 눌렀을 때만 확인)
+let appVersion = '', updPage = '';
+function showUpdate(d) {
+  const msg = $('#updMsg'), inst = $('#btnUpdInstall'), chk = $('#btnUpdCheck'), page = $('#btnUpdPage');
+  const busy = d.state === 'checking' || d.state === 'downloading' || d.state === 'installing';
+  msg.hidden = false; msg.style.color = '';
+  msg.textContent = {
+    checking: T('upd.checking'), latest: T('upd.latest'), available: F('upd.available', d.version),
+    downloading: T('upd.downloading'), installing: T('upd.installing'),
+    error: d.code === 'notWritable' ? T('upd.notWritable') : F('upd.failed', d.message || ''),
+  }[d.state] || '';
+  if (d.state === 'error') msg.style.color = 'var(--err)';
+  inst.hidden = !(d.state === 'available' || d.state === 'downloading' || d.state === 'installing');
+  inst.disabled = busy; chk.disabled = busy;
+  if (d.page) updPage = d.page;
+  page.hidden = !(updPage && (d.state === 'available' || d.state === 'error'));
+}
+function wireUpdate() {
+  $('#btnUpdCheck').onclick = () => { showUpdate({ state: 'checking' }); native({ cmd: 'updateCheck' }); };
+  $('#btnUpdInstall').onclick = () => { showUpdate({ state: 'downloading' }); native({ cmd: 'updateInstall' }); };
+  $('#btnUpdPage').onclick = () => native({ cmd: 'openPage', url: updPage });
+}
 function wireTok() { $('#btnTokRefresh').onclick = () => askTokens(true); }
 
 // ---------------------------------------------------------------- Swift가 부르는 함수
@@ -824,6 +847,7 @@ window.AW = {
     if (!langs.en) langs.en = { code: 'en', name: 'English', order: 1, strings: {} };
     S = buildSettings(data.settings);
     if (data.startup !== undefined) S.startup = !!data.startup;
+    appVersion = data.version || '';
     st = L.createState(S);
     todayKey = dateKey(new Date()); todaySec = data.todaySec || 0;
     let code = S.lang && langs[S.lang] ? S.lang : (data.sysLang || 'en').slice(0, 2).toLowerCase();
@@ -837,6 +861,7 @@ window.AW = {
   wake(min) { setForce(min); },
   show(v) { if (TABS.includes(v)) { showView(v); render(); } },                       // 메뉴 막대의 "1시간 깨워 두기"
   error(msg) { lastErr = msg; errAt = clock(); render(); },
+  update(d) { showUpdate(d || {}); },
   tokens(d) { tokBusy = false; tokRows = (d && d.rows) || []; tokAt = clock(); renderTok(); },
   fanResult(r) {
     hw.helper = r.status || hw.helper; fanSent = null;

@@ -277,6 +277,18 @@
   "tok.counted": "{0}前统计",
   "tok.empty": "还没有 Claude Code 记录。使用 Claude Code 后会显示在这里。",
   "agent.ai": "AI 工作中",
-  "agent.aiN": "AI 工作中（{0} 个对话）"
+  "agent.aiN": "AI 工作中（{0} 个对话）",
+  "upd.title": "更新",
+  "upd.current": "当前版本 {0}",
+  "upd.check": "检查更新",
+  "upd.checking": "正在检查…",
+  "upd.latest": "已是最新版本。",
+  "upd.available": "有新版本: {0}",
+  "upd.install": "立即更新",
+  "upd.downloading": "正在下载…",
+  "upd.installing": "正在安装… 稍后会重新打开。",
+  "upd.failed": "更新未完成: {0}",
+  "upd.notWritable": "无法在此文件夹中替换应用。请移到“应用程序”文件夹后重试，或从下载页面获取。",
+  "upd.page": "打开下载页面"
  }
 }

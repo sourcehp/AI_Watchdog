@@ -277,6 +277,18 @@
   "tok.counted": "Counted {0} ago",
   "tok.empty": "No Claude Code logs yet. Usage appears here after you use Claude Code.",
   "agent.ai": "AI working",
-  "agent.aiN": "AI working ({0} chats)"
+  "agent.aiN": "AI working ({0} chats)",
+  "upd.title": "Updates",
+  "upd.current": "Version {0}",
+  "upd.check": "Check for updates",
+  "upd.checking": "Checking…",
+  "upd.latest": "You have the latest version.",
+  "upd.available": "A new version is available: {0}",
+  "upd.install": "Update now",
+  "upd.downloading": "Downloading…",
+  "upd.installing": "Installing… AI Watchdog will reopen in a moment.",
+  "upd.failed": "The update didn’t finish: {0}",
+  "upd.notWritable": "AI Watchdog can’t replace itself in this folder. Move it to Applications and try again, or download it from the page.",
+  "upd.page": "Open download page"
  }
 }

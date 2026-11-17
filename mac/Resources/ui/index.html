@@ -182,6 +182,13 @@
     <label class="switch indent"><div><span data-t="x.meters"></span><p class="hint" data-t="x.metersHint"></p></div><input type="checkbox" data-k="meters"><i></i></label>
     <label class="switch indent"><div><span data-t="x.startup"></span><p class="hint" data-t="x.startupHint"></p></div><input type="checkbox" data-k="startup"><i></i></label>
 
+    <div class="sh"><span class="badge"><svg><use href="#i-update"/></svg></span><div><b data-t="upd.title"></b><p class="hint" id="updVersion"></p></div></div>
+    <div class="indent" id="updBox">
+      <p id="updMsg" class="hint" role="status" hidden></p>
+      <div class="upd-row"><button id="btnUpdCheck" class="ghost" data-t="upd.check"></button><button id="btnUpdInstall" class="solid ink" data-t="upd.install" hidden></button></div>
+      <button id="btnUpdPage" class="link" data-t="upd.page" hidden></button>
+    </div>
+
     <div id="setFan" hidden>
       <div class="sh"><span class="badge"><svg><use href="#i-fan"/></svg></span><div><b data-t="fan.helperName"></b><p class="hint" data-t="fan.helperNameHint"></p></div></div>
       <div class="indent"><button id="btnFanRemove" class="ghost" data-t="fan.remove"></button></div>
@@ -206,6 +213,7 @@
     <symbol id="i-tune" viewBox="0 0 24 24"><path d="M4,7 H14 M18,7 H20 M4,17 H6 M10,17 H20 M14,5 V9 M18,5 V9 M6,15 V19 M10,15 V19"/></symbol>
     <symbol id="i-globe" viewBox="0 0 24 24"><path d="M3.5,12 A8.5,8.5 0 1 1 20.5,12 A8.5,8.5 0 1 1 3.5,12 Z M3.5,12 H20.5 M12,3.5 C9,6.5 9,17.5 12,20.5 C15,17.5 15,6.5 12,3.5 Z"/></symbol>
     <symbol id="i-fan" viewBox="0 0 24 24"><path d="M12,10.2 C11,6.5 12.2,3.5 14.6,3.6 C17.2,3.8 16.4,8.4 13.6,11 M13.8,12 C17.5,11 20.5,12.2 20.4,14.6 C20.2,17.2 15.6,16.4 13,13.6 M12,13.8 C13,17.5 11.8,20.5 9.4,20.4 C6.8,20.2 7.6,15.6 10.4,13 M10.2,12 C6.5,13 3.5,11.8 3.6,9.4 C3.8,6.8 8.4,7.6 11,10.4 M10.8,12 A1.2,1.2 0 1 1 13.2,12 A1.2,1.2 0 1 1 10.8,12 Z"/></symbol>
+    <symbol id="i-update" viewBox="0 0 24 24"><path d="M19.5,12 A7.5,7.5 0 1 1 16.8,6.3 M17.5,2.8 L17.2,6.6 L13.4,6.3 M12,8.5 V13 M9.8,10.8 L12,13 L14.2,10.8"/></symbol>
     <symbol id="i-theme" viewBox="0 0 24 24"><path d="M3.5,12 A8.5,8.5 0 1 1 20.5,12 A8.5,8.5 0 1 1 3.5,12 Z M12,3.5 V20.5 M12,7 H16.5 M12,11 H19.5 M12,15 H18"/></symbol>
   </defs>
 </svg>

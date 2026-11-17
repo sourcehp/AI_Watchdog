@@ -13,6 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     private let fan = FanControl()
     private let tokens = TokenScanner()
     private let aiLogs = AILogs()
+    private let updater = Updater()
     private var lastState = ""
     private var slowTick = 0
     private var slow: [String: Any] = [:]
@@ -138,6 +139,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             "todaySec": todaySeconds(),
             "sysLang": Locale.preferredLanguages.first ?? "en",
             "startup": Power.startupEnabled,
+            "version": Updater.current,
         ]
         if let d = try? Data(contentsOf: settingsURL), let s = try? JSONSerialization.jsonObject(with: d) { data["settings"] = s }
         call("AW.init", data)
@@ -255,6 +257,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             let err = cmd == "fanInstall" ? fan.install() : fan.remove()
             debugLog("\(cmd): \(err ?? "ok") → \(fan.status)")
             call("AW.fanResult", ["ok": err == nil, "error": err ?? "", "status": fan.status])
+        case "updateCheck":
+            updater.check { [weak self] state, info in
+                var d = info; d["state"] = state
+                self?.call("AW.update", d)
+            }
+        case "updateInstall":
+            updater.install(progress: { [weak self] state, info in
+                var d = info; d["state"] = state
+                if state == "error" { self?.debugLog("update: \(info)") }
+                self?.call("AW.update", d)
+            }, relaunch: { [weak self] app in
+                self?.debugLog("update: installed, relaunching")
+                self?.power.release(); self?.fan.allAuto()
+                Updater.relaunch(app)
+                NSApp.terminate(nil)
+            })
+        case "openPage":      // 릴리스 페이지만 엶
+            if let s = m["url"] as? String, s.hasPrefix("https://github.com/sourcehp/AI_Watchdog/"), let u = URL(string: s) {
+                NSWorkspace.shared.open(u)
+            }
         case "tokens":
             tokens.scan { [weak self] rows in self?.call("AW.tokens", ["rows": rows]) }
         case "jsError":

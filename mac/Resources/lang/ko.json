@@ -277,6 +277,18 @@
   "tok.counted": "{0} 전에 셈",
   "tok.empty": "아직 Claude Code 기록이 없어요. Claude Code를 쓰면 여기에 쌓여요.",
   "agent.ai": "AI 작업 중",
-  "agent.aiN": "AI 작업 중 (대화 {0}개)"
+  "agent.aiN": "AI 작업 중 (대화 {0}개)",
+  "upd.title": "업데이트",
+  "upd.current": "지금 버전 {0}",
+  "upd.check": "업데이트 확인",
+  "upd.checking": "확인하는 중…",
+  "upd.latest": "최신 버전이에요.",
+  "upd.available": "새 버전이 나왔어요: {0}",
+  "upd.install": "지금 업데이트",
+  "upd.downloading": "내려받는 중…",
+  "upd.installing": "설치하는 중… 곧 다시 켜져요.",
+  "upd.failed": "업데이트를 끝내지 못했어요: {0}",
+  "upd.notWritable": "이 폴더에서는 앱을 바꿀 수 없어요. 응용 프로그램 폴더로 옮긴 뒤 다시 하거나, 다운로드 페이지에서 받아 주세요.",
+  "upd.page": "다운로드 페이지 열기"
  }
 }

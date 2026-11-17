@@ -78,7 +78,19 @@
   "tok.counted": "Counted {0} ago",
   "tok.empty": "No Claude Code logs yet. Usage appears here after you use Claude Code.",
   "agent.ai": "AI working",
-  "agent.aiN": "AI working ({0} chats)"
+  "agent.aiN": "AI working ({0} chats)",
+  "upd.title": "Updates",
+  "upd.current": "Version {0}",
+  "upd.check": "Check for updates",
+  "upd.checking": "Checking…",
+  "upd.latest": "You have the latest version.",
+  "upd.available": "A new version is available: {0}",
+  "upd.install": "Update now",
+  "upd.downloading": "Downloading…",
+  "upd.installing": "Installing… AI Watchdog will reopen in a moment.",
+  "upd.failed": "The update didn’t finish: {0}",
+  "upd.notWritable": "AI Watchdog can’t replace itself in this folder. Move it to Applications and try again, or download it from the page.",
+  "upd.page": "Open download page"
  },
  "ko": {
   "tab.main": "지킴이",
@@ -159,7 +171,19 @@
   "tok.counted": "{0} 전에 셈",
   "tok.empty": "아직 Claude Code 기록이 없어요. Claude Code를 쓰면 여기에 쌓여요.",
   "agent.ai": "AI 작업 중",
-  "agent.aiN": "AI 작업 중 (대화 {0}개)"
+  "agent.aiN": "AI 작업 중 (대화 {0}개)",
+  "upd.title": "업데이트",
+  "upd.current": "지금 버전 {0}",
+  "upd.check": "업데이트 확인",
+  "upd.checking": "확인하는 중…",
+  "upd.latest": "최신 버전이에요.",
+  "upd.available": "새 버전이 나왔어요: {0}",
+  "upd.install": "지금 업데이트",
+  "upd.downloading": "내려받는 중…",
+  "upd.installing": "설치하는 중… 곧 다시 켜져요.",
+  "upd.failed": "업데이트를 끝내지 못했어요: {0}",
+  "upd.notWritable": "이 폴더에서는 앱을 바꿀 수 없어요. 응용 프로그램 폴더로 옮긴 뒤 다시 하거나, 다운로드 페이지에서 받아 주세요.",
+  "upd.page": "다운로드 페이지 열기"
  },
  "ja": {
   "tab.main": "見守り",
@@ -240,7 +264,19 @@
   "tok.counted": "{0} 前に集計",
   "tok.empty": "Claude Code の記録はまだありません。Claude Code を使うとここに表示されます。",
   "agent.ai": "AI 作業中",
-  "agent.aiN": "AI 作業中（会話 {0} 件）"
+  "agent.aiN": "AI 作業中（会話 {0} 件）",
+  "upd.title": "アップデート",
+  "upd.current": "バージョン {0}",
+  "upd.check": "アップデートを確認",
+  "upd.checking": "確認しています…",
+  "upd.latest": "最新バージョンです。",
+  "upd.available": "新しいバージョンがあります: {0}",
+  "upd.install": "今すぐアップデート",
+  "upd.downloading": "ダウンロードしています…",
+  "upd.installing": "インストールしています… まもなく再起動します。",
+  "upd.failed": "アップデートを完了できませんでした: {0}",
+  "upd.notWritable": "このフォルダではアプリを置き換えられません。アプリケーションフォルダに移動してからもう一度試すか、ダウンロードページから入手してください。",
+  "upd.page": "ダウンロードページを開く"
  },
  "zh": {
   "tab.main": "看守",
@@ -321,7 +357,19 @@
   "tok.counted": "{0}前统计",
   "tok.empty": "还没有 Claude Code 记录。使用 Claude Code 后会显示在这里。",
   "agent.ai": "AI 工作中",
-  "agent.aiN": "AI 工作中（{0} 个对话）"
+  "agent.aiN": "AI 工作中（{0} 个对话）",
+  "upd.title": "更新",
+  "upd.current": "当前版本 {0}",
+  "upd.check": "检查更新",
+  "upd.checking": "正在检查…",
+  "upd.latest": "已是最新版本。",
+  "upd.available": "有新版本: {0}",
+  "upd.install": "立即更新",
+  "upd.downloading": "正在下载…",
+  "upd.installing": "正在安装… 稍后会重新打开。",
+  "upd.failed": "更新未完成: {0}",
+  "upd.notWritable": "无法在此文件夹中替换应用。请移到“应用程序”文件夹后重试，或从下载页面获取。",
+  "upd.page": "打开下载页面"
  },
  "es": {
   "tab.main": "Vigilar",
@@ -402,7 +450,19 @@
   "tok.counted": "Contado hace {0}",
   "tok.empty": "Aún no hay registros de Claude Code. Aparecerán aquí cuando lo uses.",
   "agent.ai": "IA trabajando",
-  "agent.aiN": "IA trabajando ({0} chats)"
+  "agent.aiN": "IA trabajando ({0} chats)",
+  "upd.title": "Actualizaciones",
+  "upd.current": "Versión {0}",
+  "upd.check": "Buscar actualizaciones",
+  "upd.checking": "Buscando…",
+  "upd.latest": "Tienes la última versión.",
+  "upd.available": "Hay una nueva versión: {0}",
+  "upd.install": "Actualizar ahora",
+  "upd.downloading": "Descargando…",
+  "upd.installing": "Instalando… AI Watchdog se volverá a abrir enseguida.",
+  "upd.failed": "La actualización no terminó: {0}",
+  "upd.notWritable": "AI Watchdog no puede reemplazarse en esta carpeta. Muévelo a Aplicaciones e inténtalo de nuevo, o descárgalo desde la página.",
+  "upd.page": "Abrir página de descarga"
  },
  "vi": {
   "tab.main": "Canh chừng",
@@ -483,7 +543,19 @@
   "tok.counted": "Đã đếm {0} trước",
   "tok.empty": "Chưa có nhật ký Claude Code. Khi bạn dùng Claude Code, số liệu sẽ hiện ở đây.",
   "agent.ai": "AI đang làm việc",
-  "agent.aiN": "AI đang làm việc ({0} cuộc trò chuyện)"
+  "agent.aiN": "AI đang làm việc ({0} cuộc trò chuyện)",
+  "upd.title": "Cập nhật",
+  "upd.current": "Phiên bản {0}",
+  "upd.check": "Kiểm tra cập nhật",
+  "upd.checking": "Đang kiểm tra…",
+  "upd.latest": "Bạn đang dùng phiên bản mới nhất.",
+  "upd.available": "Có phiên bản mới: {0}",
+  "upd.install": "Cập nhật ngay",
+  "upd.downloading": "Đang tải xuống…",
+  "upd.installing": "Đang cài đặt… AI Watchdog sẽ mở lại ngay.",
+  "upd.failed": "Cập nhật chưa xong: {0}",
+  "upd.notWritable": "Không thể thay ứng dụng trong thư mục này. Hãy chuyển vào thư mục Ứng dụng rồi thử lại, hoặc tải từ trang tải xuống.",
+  "upd.page": "Mở trang tải xuống"
  },
  "th": {
   "tab.main": "เฝ้าดู",
@@ -564,6 +636,18 @@
   "tok.counted": "นับเมื่อ {0} ที่แล้ว",
   "tok.empty": "ยังไม่มีบันทึก Claude Code เมื่อใช้ Claude Code ข้อมูลจะแสดงที่นี่",
   "agent.ai": "AI กำลังทำงาน",
-  "agent.aiN": "AI กำลังทำงาน ({0} แชท)"
+  "agent.aiN": "AI กำลังทำงาน ({0} แชท)",
+  "upd.title": "อัปเดต",
+  "upd.current": "เวอร์ชัน {0}",
+  "upd.check": "ตรวจหาอัปเดต",
+  "upd.checking": "กำลังตรวจสอบ…",
+  "upd.latest": "คุณใช้เวอร์ชันล่าสุดแล้ว",
+  "upd.available": "มีเวอร์ชันใหม่: {0}",
+  "upd.install": "อัปเดตเลย",
+  "upd.downloading": "กำลังดาวน์โหลด…",
+  "upd.installing": "กำลังติดตั้ง… AI Watchdog จะเปิดใหม่ในไม่ช้า",
+  "upd.failed": "อัปเดตไม่สำเร็จ: {0}",
+  "upd.notWritable": "แทนที่แอปในโฟลเดอร์นี้ไม่ได้ ย้ายไปไว้ในโฟลเดอร์แอปพลิเคชันแล้วลองใหม่ หรือดาวน์โหลดจากหน้าดาวน์โหลด",
+  "upd.page": "เปิดหน้าดาวน์โหลด"
  }
 }

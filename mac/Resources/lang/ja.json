@@ -277,6 +277,18 @@
   "tok.counted": "{0} 前に集計",
   "tok.empty": "Claude Code の記録はまだありません。Claude Code を使うとここに表示されます。",
   "agent.ai": "AI 作業中",
-  "agent.aiN": "AI 作業中（会話 {0} 件）"
+  "agent.aiN": "AI 作業中（会話 {0} 件）",
+  "upd.title": "アップデート",
+  "upd.current": "バージョン {0}",
+  "upd.check": "アップデートを確認",
+  "upd.checking": "確認しています…",
+  "upd.latest": "最新バージョンです。",
+  "upd.available": "新しいバージョンがあります: {0}",
+  "upd.install": "今すぐアップデート",
+  "upd.downloading": "ダウンロードしています…",
+  "upd.installing": "インストールしています… まもなく再起動します。",
+  "upd.failed": "アップデートを完了できませんでした: {0}",
+  "upd.notWritable": "このフォルダではアプリを置き換えられません。アプリケーションフォルダに移動してからもう一度試すか、ダウンロードページから入手してください。",
+  "upd.page": "ダウンロードページを開く"
  }
 }

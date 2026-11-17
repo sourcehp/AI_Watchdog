@@ -136,6 +136,9 @@ select.field{width:auto;min-width:180px;padding:7px 10px}
 .seg button.on{background:var(--card);color:var(--ink);font-weight:600}
 .scroll::-webkit-scrollbar{width:8px} .scroll::-webkit-scrollbar-thumb{background:var(--off);border-radius:3px}
 
+.upd-row{display:flex;gap:8px;align-items:center;margin-top:6px}
+#updMsg{margin:0 0 2px}
+#btnUpdPage{margin-top:8px}
 #footer{font-size:11.5px;color:var(--foot);margin:16px 22px;white-space:pre-line;line-height:1.45}
 #footer.err{color:var(--err)}
 
@@ -267,3 +270,4 @@ input[type=range]:focus-visible{outline:2px solid var(--moon);outline-offset:3px
 .mrow small{color:var(--muted);text-align:right;font-size:12px}
 #vTok>.hint{margin-top:12px}
 .tokFoot{margin-top:6px}
+#setFan>.sh{margin-top:22px}
