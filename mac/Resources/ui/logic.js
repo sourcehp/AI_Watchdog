@@ -3,7 +3,12 @@
 (function (root) {
   'use strict';
   const NEVER = -1e12;
-  const HELPERS = ['crashpad_handler', 'chrome_crashpad_handler', 'zsh', 'bash', 'sh', 'login'];
+  const SHELLS = ['zsh', 'bash', 'sh', 'fish', 'login'];
+  const HELPERS = ['crashpad_handler', 'chrome_crashpad_handler', ...SHELLS];
+  // 자기 CPU 는 "프로세스 하나의 최근 WINDOW번 평균"으로 봄.
+  // 전부 더하면 쉬는 세션·헬퍼 수십 개의 1~2%가 쌓여 늘 기준을 넘음 (2026-11-17 실측: 쉬는데도 합계 8~16%).
+  const WINDOW = 10;
+  const isHelperName = (procName, names) => names.some(n => String(procName).toLowerCase().startsWith(n + ' helper'));
 
   function splitNames(text) {
     return String(text || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
@@ -27,7 +32,8 @@
   }
 
   function tstate(st, id) {
-    if (!st.t[id]) st.t[id] = { prevCpu: 0, prevDesc: 0, prevTime: 0, first: true, known: new Set(),
+    if (!st.t[id]) st.t[id] = { prevCpu: 0, prevTime: 0, first: true, known: new Set(),
+      ownBook: { prev: new Map(), hist: new Map() }, descBook: { prev: new Map(), hist: new Map() },
       lastAct: NEVER, lastLocal: NEVER, pct: 0, mem: 0, running: false, status: 'checking' };
     return st.t[id];
   }
@@ -66,28 +72,51 @@
 
       let cpu = 0, mem = 0;
       for (const p of plist) { cpu += p.cpuSec || 0; mem += p.mem || 0; }
-      // 하위 프로세스 (자기 이름·보조 프로세스 제외)
+      const dt = now - ts.prevTime > 0 ? now - ts.prevTime : 1;
+      // 프로세스마다 최근 WINDOW번의 CPU % (없던 칸은 0으로 보고 평균) → 가장 큰 값을 돌려줌.
+      // book = {prev: Map(pid→cpuSec), hist: Map(pid→[%...])} 를 이번 프로세스 목록으로 갈아 끼움
+      const busiestOf = (list, book) => {
+        let best = 0;
+        const hist = new Map(), prev = new Map();
+        for (const p of list) {
+          const c = p.cpuSec || 0, before = book.prev.get(p.pid);
+          const h = first ? [] : (book.hist.get(p.pid) || []).slice(-(WINDOW - 1));
+          if (!first && before != null) h.push(Math.max(0, c - before) * 100 / dt);
+          hist.set(p.pid, h); prev.set(p.pid, c);
+          best = Math.max(best, h.reduce((a, b) => a + b, 0) / WINDOW);
+        }
+        book.hist = hist; book.prev = prev;
+        return best;
+      };
+      const busiest = busiestOf(plist, ts.ownBook);
+      // 하위 프로세스 (자기 이름·보조 프로세스 제외).
+      // 앱 헬퍼가 직접 띄운 프로그램(Claude Helper → git 등 주기적 확인)은 AI 작업이 아니라서 뺌.
+      // 단, 헬퍼가 띄운 셸(터미널) 아래 명령은 셈.
       const desc = new Set(), seen = new Set(plist.map(p => p.pid)), queue = plist.map(p => p.pid);
       while (queue.length) {
+        const parent = byId.get(queue[0]);
+        const fromHelper = parent && isHelperName(parent.name, own);
         for (const c of kids.get(queue.shift()) || []) {
           if (seen.has(c.pid)) continue;
-          seen.add(c.pid); queue.push(c.pid);
+          seen.add(c.pid);
           const nm = String(c.name).toLowerCase();
+          if (fromHelper && !SHELLS.includes(nm)) continue;     // 그 아래도 보지 않음
+          queue.push(c.pid);
           if (!matches(nm, own) && !HELPERS.includes(nm)) desc.add(c.pid);
         }
       }
-      let descCpu = 0;
-      for (const id of desc) { const p = byId.get(id); descCpu += p.cpuSec || 0; mem += p.mem || 0; }
+      for (const id of desc) mem += byId.get(id).mem || 0;
+      // 하위 프로세스도 하나씩 봄 (MCP 서버처럼 조용히 떠 있는 것 여러 개의 0.2~0.4%가 쌓이지 않게)
+      const descBusiest = busiestOf([...desc].map(id => byId.get(id)), ts.descBook);
 
       let newFound = false;
       if (!first) for (const id of desc) if (!ts.known.has(id)) { newFound = true; break; }
       ts.known = desc;
 
-      const dt = now - ts.prevTime > 0 ? now - ts.prevTime : 1;
-      let pct = Math.max(0, cpu - ts.prevCpu) * 100 / dt;
-      let lpct = Math.max(0, descCpu - ts.prevDesc) * 100 / dt;
+      let pct = busiest;
+      let lpct = descBusiest;
       if (first) { pct = 0; lpct = 0; }
-      ts.prevCpu = cpu; ts.prevDesc = descCpu; ts.prevTime = now;
+      ts.prevCpu = cpu; ts.prevTime = now;
       ts.first = !ts.running;
       ts.pct = pct; ts.mem = mem;
 

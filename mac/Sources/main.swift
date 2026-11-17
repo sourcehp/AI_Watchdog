@@ -36,6 +36,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
 
     // ---------------------------------------------------------------- 시작
     func applicationDidFinishLaunching(_ note: Notification) {
+        // 하나만 실행: 이미 켜진 AI Watchdog가 있으면
+        //  - 그쪽이 같거나 새 버전 → 그쪽 창을 열고 이쪽은 끝냄
+        //  - 그쪽이 옛 버전 → 그쪽을 끄고 이쪽이 이어받음 (업데이트한 뒤 옛 앱이 남는 일 방지)
+        if let id = Bundle.main.bundleIdentifier {
+            let mine = Self.version(Bundle.main)
+            for other in NSRunningApplication.runningApplications(withBundleIdentifier: id) where other.processIdentifier != getpid() {
+                let theirs = other.bundleURL.flatMap { Bundle(url: $0) }.map(Self.version) ?? []
+                if theirs.lexicographicallyPrecedes(mine) {
+                    other.terminate()
+                } else {
+                    if let url = other.bundleURL { NSWorkspace.shared.openApplication(at: url, configuration: .init()) }
+                    NSApp.terminate(nil)
+                    return
+                }
+            }
+        }
         // 로그인할 때 자동으로 켜졌으면 창 없이 메뉴 막대에서만 시작
         // 'prdt' = keyAEPropData, 'lgit' = keyAELaunchedAsLogInItem
         if let ev = NSAppleEventManager.shared().currentAppleEvent,
@@ -338,6 +354,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             guard cols.count >= 3, cols[0].hasPrefix(today), let s = Double(cols[2]) else { return sum }
             return sum + s
         }
+    }
+
+    /// "1.1.0" + 빌드 번호 → [1, 1, 0, 빌드] (버전 비교용)
+    static func version(_ b: Bundle) -> [Int] {
+        let short = (b.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0")
+        let build = Int(b.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0") ?? 0
+        return short.split(separator: ".").map { Int($0) ?? 0 } + [build]
     }
 
     // ---------------------------------------------------------------- 메뉴 막대 아이콘 (고리 + 가운데 점)

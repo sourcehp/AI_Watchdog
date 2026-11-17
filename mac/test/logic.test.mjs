@@ -65,7 +65,8 @@ test('screenActionImmediate', () => {
     if (r.fire && !fired) fired = { kind: r.fire, t };
   }
   assert.equal(fired.kind, 'screen');
-  assert.ok(fired.t <= 1004 + 120 + 600 + 1);
+  // CPU 를 최근 10초 평균으로 보므로 마지막 작업 시각이 최대 10초 늦게 잡힘
+  assert.ok(fired.t <= 1004 + 10 + 120 + 600 + 1);
   assert.equal(st.pending, null);
 });
 
@@ -137,4 +138,84 @@ test('finishedSessionReported', () => {
   for (let t = 1120; t < 1300; t++) { L.ingest(st, smp(st._cpu), t); const r = L.step(st, t); if (r.finished) fin = r.finished; }
   assert.ok(fin && fin.sec >= 110);
   assert.equal(fin.programs, 'Claude');
+});
+
+// ---- 실제 측정(2026-11-17)에서 나온 거짓 "작업 중" ----
+// Claude 앱은 쉬고 있어도 프로세스가 많음: claude CLI 세션 여러 개(각 ~1%, 가끔 10% 반짝), 헬퍼·렌더러(~1~2%).
+function idleCrowd(t) {
+  const procs = [{ pid: 10, ppid: 1, name: 'Claude', cpuSec: t * 0.01, mem: 1e8 }];
+  for (let i = 0; i < 6; i++) {           // 쉬는 claude CLI 세션 6개: 1%/초 + 10초마다 10% 반짝
+    const spikes = Math.floor((t + i * 3) / 10);
+    procs.push({ pid: 100 + i, ppid: 10, name: 'claude', cpuSec: t * 0.01 + spikes * 0.1, mem: 1e8 });
+  }
+  procs.push({ pid: 200, ppid: 10, name: 'Claude Helper (Renderer)', cpuSec: t * 0.024, mem: 1e8 });
+  procs.push({ pid: 201, ppid: 10, name: 'Claude Helper', cpuSec: t * 0.012, mem: 1e8 });
+  return procs;
+}
+
+test('manyIdleProcessesStayIdle', () => {
+  const st = L.createState(base({ auto: false }));
+  let r;
+  for (let t = 1000; t < 1300; t++) {
+    L.ingest(st, { procs: idleCrowd(t - 1000), userIdleSec: 9999 }, t);
+    r = L.step(st, t);
+  }
+  assert.equal(st.t.claude.status, 'idle');
+  assert.equal(r.hold, false);
+  assert.equal(L.view(st, 1299).mode, 'idle');
+});
+
+test('helperSpawnedGitIsNotACommand', () => {
+  const st = L.createState(base({ auto: false }));
+  let r;
+  for (let t = 1000; t < 1300; t++) {
+    const procs = idleCrowd(t - 1000);
+    if (t % 20 === 0) procs.push({ pid: 5000 + t, ppid: 201, name: 'git', cpuSec: 0.02, mem: 1e6 });   // 헬퍼가 git 을 자주 띄움
+    L.ingest(st, { procs, userIdleSec: 9999 }, t);
+    r = L.step(st, t);
+  }
+  assert.notEqual(st.t.claude.status, 'cmd');
+  assert.equal(r.hold, false);
+});
+
+test('oneBusySessionAmongIdleCounts', () => {
+  const st = L.createState(base({ auto: false }));
+  let busy = 0, r;
+  for (let t = 1000; t < 1020; t++) {
+    busy += 0.15;                           // 일하는 세션 하나: 15%
+    const procs = idleCrowd(t - 1000);
+    procs.push({ pid: 300, ppid: 10, name: 'claude', cpuSec: busy, mem: 1e8 });
+    L.ingest(st, { procs, userIdleSec: 9999 }, t);
+    r = L.step(st, t);
+  }
+  assert.equal(st.t.claude.status, 'working');
+  assert.equal(r.hold, true);
+});
+
+test('terminalCommandUnderSessionCounts', () => {
+  const st = L.createState(base({ auto: false }));
+  let r;
+  for (let t = 1000; t < 1010; t++) {
+    const procs = idleCrowd(t - 1000);
+    procs.push({ pid: 400, ppid: 100, name: 'zsh', cpuSec: 0, mem: 1e6 });
+    if (t >= 1005) procs.push({ pid: 401, ppid: 400, name: 'npm', cpuSec: 0, mem: 1e6 });   // 세션이 명령을 실행
+    L.ingest(st, { procs, userIdleSec: 9999 }, t);
+    r = L.step(st, t);
+  }
+  assert.equal(st.t.claude.status, 'cmd');
+  assert.equal(r.hold, true);
+});
+
+test('manySmallChildrenAreNotACommand', () => {
+  // MCP 서버 같은 하위 프로세스 8개가 각각 0.3%씩: 합치면 2.4% 이지만 아무 일도 안 하는 중
+  const st = L.createState(base({ auto: false }));
+  let r;
+  for (let t = 1000; t < 1300; t++) {
+    const procs = idleCrowd(t - 1000);
+    for (let i = 0; i < 8; i++) procs.push({ pid: 500 + i, ppid: 100, name: 'node', cpuSec: (t - 1000) * 0.003, mem: 1e7 });
+    L.ingest(st, { procs, userIdleSec: 9999 }, t);
+    r = L.step(st, t);
+  }
+  assert.equal(st.t.claude.status, 'idle');
+  assert.equal(r.hold, false);
 });
