@@ -343,7 +343,11 @@ function render() {
   }
 
   const tip = ('AI Watchdog: ' + $('#stTitle').textContent);
-  if (state + tip !== lastStatus) { lastStatus = state + tip; native({ cmd: 'status', state, tip }); }
+  if (state + tip !== lastStatus) {
+    lastStatus = state + tip;
+    const why = S.targets.filter(t => t.enabled && st.t[t.id]).map(t => `${t.id}:${st.t[t.id].status} ${st.t[t.id].why || ''}`.trim()).join(' | ');
+    native({ cmd: 'status', state, tip, why });   // why 는 debug.log 진단용
+  }
   $('#pmWakeOff').disabled = !(now < st.forceUntil);
 }
 

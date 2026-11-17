@@ -25,13 +25,21 @@
   }
   function logWorking(entries, now) {
     let count = 0;
+    const reasons = [];
     for (const e of entries || []) {
       if (!e || typeof e.t !== 'number' || logEnded(e)) continue;
       const age = now - e.t;
       const limit = e.type === 'api-request' ? LOG_REQUEST : e.type === 'assistant' && e.tool ? LOG_TOOL : LOG_OTHER;
-      if (age <= LOG_FRESH || age <= limit) count++;
+      if (age <= LOG_FRESH || age <= limit) { count++; reasons.push(`${e.type}${e.sub ? '/' + e.sub : ''}${e.tool ? '+tool' : ''} ${Math.round(age)}s`); }
     }
-    return { working: count > 0, count };
+    return { working: count > 0, count, reasons };
+  }
+
+  // 진단용: "어떤 프로세스(부모) 가 몇 %" 를 글로
+  function cmdWhy(p, pct, byId) {
+    if (!p) return '';
+    const par = byId.get(p.ppid), gp = par && byId.get(par.ppid);
+    return `cpu ${p.name}(${p.pid}) <- ${par ? par.name : '?'} <- ${gp ? gp.name : '?'} ${pct.toFixed(1)}%`;
   }
 
   function splitNames(text) {
@@ -100,14 +108,15 @@
       // 프로세스마다 최근 WINDOW번의 CPU % (없던 칸은 0으로 보고 평균) → 가장 큰 값을 돌려줌.
       // book = {prev: Map(pid→cpuSec), hist: Map(pid→[%...])} 를 이번 프로세스 목록으로 갈아 끼움
       const busiestOf = (list, book) => {
-        let best = 0;
+        let best = 0; book.top = null;
         const hist = new Map(), prev = new Map();
         for (const p of list) {
           const c = p.cpuSec || 0, before = book.prev.get(p.pid);
           const h = first ? [] : (book.hist.get(p.pid) || []).slice(-(WINDOW - 1));
           if (!first && before != null) h.push(Math.max(0, c - before) * 100 / dt);
           hist.set(p.pid, h); prev.set(p.pid, c);
-          best = Math.max(best, h.reduce((a, b) => a + b, 0) / WINDOW);
+          const avg = h.reduce((a, b) => a + b, 0) / WINDOW;
+          if (avg > best) { best = avg; book.top = p; }
         }
         book.hist = hist; book.prev = prev;
         return best;
@@ -116,22 +125,30 @@
       // 하위 프로세스 (자기 이름·보조 프로세스 제외).
       // 앱 헬퍼가 직접 띄운 프로그램(Claude Helper → git 등 주기적 확인)은 AI 작업이 아니라서 뺌.
       // 단, 헬퍼가 띄운 셸(터미널) 아래 명령은 셈.
-      const desc = new Set(), seen = new Set(plist.map(p => p.pid)), queue = plist.map(p => p.pid);
+      // aiShell: AI 세션(헬퍼가 아닌 자기 프로세스, 예: claude CLI)이 띄운 셸과 그 아래 — AI 가 Bash 로 실행한 명령
+      const desc = new Set(), aiShell = new Set(), seen = new Set(plist.map(p => p.pid)), queue = plist.map(p => p.pid);
       while (queue.length) {
-        const parent = byId.get(queue[0]);
+        const parentPid = queue.shift(), parent = byId.get(parentPid);
         const fromHelper = parent && isHelperName(parent.name, own);
-        for (const c of kids.get(queue.shift()) || []) {
+        const fromSession = parent && matches(parent.name, own) && !fromHelper;
+        for (const c of kids.get(parentPid) || []) {
           if (seen.has(c.pid)) continue;
           seen.add(c.pid);
           const nm = String(c.name).toLowerCase();
           if (fromHelper && !SHELLS.includes(nm)) continue;     // 그 아래도 보지 않음
           queue.push(c.pid);
+          if (aiShell.has(parentPid) || (fromSession && SHELLS.includes(nm))) aiShell.add(c.pid);
           if (!matches(nm, own) && !HELPERS.includes(nm)) desc.add(c.pid);
         }
       }
       for (const id of desc) mem += byId.get(id).mem || 0;
+      // 대화 기록이 있는 앱(Claude·Codex)은 기록으로 "AI 작업"을 보고, 명령은 AI 세션이 셸로 실행한 것만 셈.
+      // 대화를 열 때 켜지는 MCP 서버(claude → npm exec/node/Python), 앱 안 터미널(Claude Helper → zsh)은 AI 작업이 아님 (2026-11-17 실측).
+      const logs = t.logs && s.aiLogs ? s.aiLogs[t.logs] : undefined;
+      ts.logBased = Array.isArray(logs) && t.mode !== 'alive';
+      const counted = ts.logBased ? [...desc].filter(id => aiShell.has(id)) : [...desc];
       // 하위 프로세스도 하나씩 봄 (MCP 서버처럼 조용히 떠 있는 것 여러 개의 0.2~0.4%가 쌓이지 않게)
-      const descBusiest = busiestOf([...desc].map(id => byId.get(id)), ts.descBook);
+      const descBusiest = busiestOf(counted.map(id => byId.get(id)), ts.descBook);
 
       let newFound = false;
       if (!first) for (const id of desc) if (!ts.known.has(id)) { newFound = true; break; }
@@ -144,19 +161,19 @@
       ts.first = !ts.running;
       ts.pct = pct; ts.mem = mem;
 
-      // 대화 기록이 있는 앱(Claude·Codex)은 기록으로만 "AI 작업"을 봄 — 창을 그리는 CPU, 세션을 열 때 생기는 프로세스는 AI 작업이 아님.
-      // 그래도 AI 가 실행한 명령이 실제로 CPU 를 쓰면(빌드 등) "명령 실행 중".
-      const logs = t.logs && s.aiLogs ? s.aiLogs[t.logs] : undefined;
-      ts.logBased = Array.isArray(logs) && t.mode !== 'alive';
+      // 대화 기록이 있는 앱은 기록으로만 "AI 작업"을 봄 — 창을 그리는 CPU 는 셈하지 않음.
+      // 그래도 AI 가 셸로 실행한 명령이 실제로 CPU 를 쓰면(빌드 등) "명령 실행 중".
       ts.aiCount = 0;
       if (ts.running && ts.logBased) {
         const lw = logWorking(logs, now);
         ts.aiCount = lw.count;
+        ts.why = lw.working ? 'log ' + lw.reasons.join(', ') : '';
         if (lw.working) ts.lastAct = now;
-        if (!first && lpct >= 1) ts.lastLocal = now;
+        if (!first && lpct >= 1) { ts.lastLocal = now; ts.why = cmdWhy(ts.descBook.top, lpct, byId); }
       } else if (ts.running && !first) {
         if (t.mode === 'alive' || pct >= st.settings.cpuTh) ts.lastAct = now;
-        if (newFound || lpct >= 1) ts.lastLocal = now;
+        if (newFound || lpct >= 1) { ts.lastLocal = now; ts.why = newFound ? 'new child process' : cmdWhy(ts.descBook.top, lpct, byId); }
+        else if (t.mode !== 'alive' && pct >= st.settings.cpuTh) ts.why = cmdWhy(ts.ownBook.top, pct, byId);
       }
     }
 

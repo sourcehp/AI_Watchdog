@@ -299,3 +299,54 @@ test('claudeNotRunningIgnoresLogs', () => {
   assert.equal(st.t.claude.status, 'off');
   assert.equal(L.step(st, 1000).hold, false);
 });
+
+// ---- 실측(2026-11-17 01:45): 대화를 열면 Claude Code 가 MCP 서버(npm exec @playwright/mcp …)를 켜며 CPU 를 씀 ----
+// 기록으로 판정하는 앱은 "AI 세션이 셸로 실행한 명령"만 명령으로 셈.
+function withSession(t, extra) {
+  const procs = idleCrowd(t);   // pid 100~105 = claude CLI 세션
+  return procs.concat(extra);
+}
+test('sessionOpenMcpStartupIsNotACommand', () => {
+  const st = L.createState(claudeLogs());
+  let r;
+  for (let t = 1000; t < 1200; t++) {
+    const k = t - 1000, busy = Math.min(k, 30) * 0.3;            // 처음 30초 동안 30%
+    r = (L.ingest(st, { procs: withSession(k, [
+      { pid: 700, ppid: 100, name: 'npm exec @playwright/mcp@latest', cpuSec: busy, mem: 1e7 },
+      { pid: 701, ppid: 100, name: 'node', cpuSec: busy, mem: 1e7 },
+      { pid: 702, ppid: 100, name: 'Python', cpuSec: busy, mem: 1e7 },
+    ]), userIdleSec: 9999, aiLogs: { claude: [{ t: 900, type: 'system', sub: 'stop_hook_summary' }] } }, t), L.step(st, t));
+    assert.notEqual(st.t.claude.status, 'cmd', `t=${t}`);
+  }
+  assert.equal(r.hold, false);
+});
+
+test('aiShellCommandStillCountsForLogTargets', () => {
+  // AI 가 셸로 띄운 긴 빌드: 기록상 도구 실행 30분이 지나도, 명령이 CPU 를 쓰면 "명령 실행 중"
+  const st = L.createState(claudeLogs());
+  let c = 0, r;
+  for (let t = 1000; t < 1015; t++) {
+    c += 0.5;
+    r = (L.ingest(st, { procs: withSession(t - 1000, [
+      { pid: 800, ppid: 100, name: 'zsh', cpuSec: 0, mem: 1e6 },
+      { pid: 801, ppid: 800, name: 'cargo', cpuSec: c, mem: 1e7 },
+    ]), userIdleSec: 9999, aiLogs: { claude: [{ t: 1000 - 3600, type: 'assistant', stop: 'tool_use', tool: true }] } }, t), L.step(st, t));
+  }
+  assert.equal(st.t.claude.status, 'cmd');
+  assert.equal(r.hold, true);
+});
+
+test('appTerminalCommandIsNotAiForLogTargets', () => {
+  // Claude 앱 안 터미널(Claude Helper → zsh)에서 사람이 돌린 명령은 AI 작업이 아님
+  const st = L.createState(claudeLogs());
+  let c = 0;
+  for (let t = 1000; t < 1015; t++) {
+    c += 0.5;
+    L.ingest(st, { procs: withSession(t - 1000, [
+      { pid: 900, ppid: 201, name: 'zsh', cpuSec: 0, mem: 1e6 },
+      { pid: 901, ppid: 900, name: 'python3', cpuSec: c, mem: 1e7 },
+    ]), userIdleSec: 9999, aiLogs: { claude: [] } }, t);
+    L.step(st, t);
+  }
+  assert.equal(st.t.claude.status, 'idle');
+});

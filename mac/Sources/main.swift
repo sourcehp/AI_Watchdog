@@ -225,7 +225,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
             appendSession(m)
         case "status":
             let state = m["state"] as? String ?? ""
-            if state != lastState { debugLog("state: \(state) \(m["tip"] as? String ?? "")"); lastState = state }   // 판정 바뀐 때만 기록
+            if state != lastState {   // 판정이 바뀐 때만, 왜 바뀌었는지와 함께 기록
+                debugLog("state: \(state) \(m["tip"] as? String ?? "")  [\(m["why"] as? String ?? "")]"); lastState = state
+            }
             statusItem.button?.image = Self.dot(m["state"] as? String)
             statusItem.button?.toolTip = m["tip"] as? String
         case "size":
