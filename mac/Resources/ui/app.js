@@ -7,9 +7,9 @@ const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAl
 const clock = () => Date.now() / 1000;
 
 const PRESETS = [
-  { id: 'claude', label: 'Claude', names: 'claude', mode: 'cpu' },
+  { id: 'claude', label: 'Claude', names: 'claude', mode: 'cpu', logs: 'claude' },   // logs: AI 대화 기록으로 판정
   { id: 'chatgpt', label: 'ChatGPT', names: 'chatgpt', mode: 'cpu' },
-  { id: 'codex', label: 'Codex', names: 'codex', mode: 'cpu' },
+  { id: 'codex', label: 'Codex', names: 'codex', mode: 'cpu', logs: 'codex' },
   { id: 'cursor', label: 'Cursor', names: 'cursor', mode: 'cpu' },
   { id: 'antigravity', label: 'Antigravity', names: 'antigravity', mode: 'cpu' },
   { id: 'ollama', label: 'Ollama', names: 'ollama', mode: 'cpu' },
@@ -88,7 +88,7 @@ function buildSettings(saved) {
   const old = new Map((saved && saved.targets || []).map(t => [t.id, t]));
   s.targets = PRESETS.map(p => {
     const o = old.get(p.id);
-    return { id: p.id, label: p.label, names: p.names, preset: true,
+    return { id: p.id, label: p.label, names: p.names, preset: true, logs: p.logs,
       mode: o ? (o.mode === 'alive' ? 'alive' : 'cpu') : p.mode,
       enabled: o ? !!o.enabled : fresh && p.id === 'claude' };
   });
@@ -171,8 +171,9 @@ function updateAgents() {
     const ts = st.t[row.dataset.id]; if (!ts) continue;
     const stEl = row.querySelector('.st');
     stEl.textContent = { off: T('hero.off'), cmd: T('agent.cmd'), running: T('agent.running'),
+      ai: ts.aiCount > 1 ? F('agent.aiN', ts.aiCount) : T('agent.ai'),
       working: F('agent.working', ts.pct), idle: T('hero.idle'), checking: T('agent.checking') }[ts.status];
-    row.classList.toggle('lit', ['cmd', 'running', 'working'].includes(ts.status));
+    row.classList.toggle('lit', ['cmd', 'running', 'working', 'ai'].includes(ts.status));
     row.classList.toggle('idle', ts.status === 'idle');
     row.title = ts.running ? F('agent.mem', ts.mem / 1073741824) : '';
   }
@@ -882,7 +883,8 @@ if (!window.webkit && /mock/.test(location.search)) {
       const el = clock() - t0;
       if (el < work) cpu += 0.4;
       const tcpu = 62 + 14 * Math.sin(el / 9), wob = Math.sin(el / 3);
-      AW.tick({ procs: [{ pid: 10, ppid: 1, name: 'Claude', cpuSec: cpu, mem: 6e8 }, { pid: 30, ppid: 1, name: 'Cursor', cpuSec: 1, mem: 9e8 }],
+      const nowS = clock(), aiLogs = { claude: [el < work ? { t: nowS - 1, type: 'assistant', stop: 'tool_use', tool: true } : { t: t0 + work, type: 'system', sub: 'stop_hook_summary' }] };
+      AW.tick({ aiLogs, procs: [{ pid: 10, ppid: 1, name: 'Claude', cpuSec: cpu, mem: 6e8 }, { pid: 30, ppid: 1, name: 'Cursor', cpuSec: 1, mem: 9e8 }],
         userIdleSec: 999, netBytes: el * 300000, memTotal: 17179869184, memUsed: 11e9, cpuPct: 23 + 18 * wob ** 2, gpuPct: 12 + 30 * Math.abs(wob), gpuName: 'Apple M1 Pro',
         fans: fanSpec.map((f, i) => { const r = manual[i] ?? (tcpu > 66 ? 1800 + 900 * i : 0); return { rpm: r, min: f.min, max: f.max, target: r, manual: manual[i] != null }; }),
         temps: { cpu: tcpu, cpuMax: tcpu + 11, gpu: 55 + 6 * wob, battery: 31.2 },

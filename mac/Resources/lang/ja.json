@@ -275,6 +275,8 @@
   "tok.loading": "Claude Code の記録を集計しています…",
   "tok.counting": "集計中…",
   "tok.counted": "{0} 前に集計",
-  "tok.empty": "Claude Code の記録はまだありません。Claude Code を使うとここに表示されます。"
+  "tok.empty": "Claude Code の記録はまだありません。Claude Code を使うとここに表示されます。",
+  "agent.ai": "AI 作業中",
+  "agent.aiN": "AI 作業中（会話 {0} 件）"
  }
 }

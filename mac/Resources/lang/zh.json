@@ -275,6 +275,8 @@
   "tok.loading": "正在统计 Claude Code 记录…",
   "tok.counting": "统计中…",
   "tok.counted": "{0}前统计",
-  "tok.empty": "还没有 Claude Code 记录。使用 Claude Code 后会显示在这里。"
+  "tok.empty": "还没有 Claude Code 记录。使用 Claude Code 后会显示在这里。",
+  "agent.ai": "AI 工作中",
+  "agent.aiN": "AI 工作中（{0} 个对话）"
  }
 }

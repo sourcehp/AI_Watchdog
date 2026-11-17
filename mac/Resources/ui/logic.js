@@ -10,6 +10,30 @@
   const WINDOW = 10;
   const isHelperName = (procName, names) => names.some(n => String(procName).toLowerCase().startsWith(n + ' helper'));
 
+  // ---------------------------------------------------------------- AI 대화 기록으로 판정
+  // "AI 가 일하는 중" = 프로그램이 켜진 게 아니라 그 안에서 AI 가 실제로 일하는 것.
+  // Claude Code(~/.claude/projects)·Codex(~/.codex/sessions)는 대화 기록 파일에 시각이 찍힌 줄을 남김.
+  // Swift 가 최근 바뀐 파일마다 "시각이 찍힌 마지막 줄" {t, type, sub, stop, tool} 을 보냄. (관리용 줄은 시각이 없어 빠짐)
+  const LOG_FRESH = 10;            // 방금 쓴 줄이면 일하는 중
+  const LOG_REQUEST = 15 * 60;     // 모델에 요청을 보내고 답을 기다리는 중 (길게 생각)
+  const LOG_TOOL = 30 * 60;        // AI 가 도구를 실행하는 중
+  const LOG_OTHER = 120;           // 그 밖의 줄 다음에는 곧 무언가 이어져야 함
+  function logEnded(e) {           // 턴이 끝났다는 줄
+    return (e.type === 'system' && (e.sub === 'stop_hook_summary' || e.sub === 'turn_duration')) ||
+      (e.type === 'assistant' && e.stop === 'end_turn' && !e.tool) ||
+      e.sub === 'task_complete' || e.sub === 'turn_aborted';
+  }
+  function logWorking(entries, now) {
+    let count = 0;
+    for (const e of entries || []) {
+      if (!e || typeof e.t !== 'number' || logEnded(e)) continue;
+      const age = now - e.t;
+      const limit = e.type === 'api-request' ? LOG_REQUEST : e.type === 'assistant' && e.tool ? LOG_TOOL : LOG_OTHER;
+      if (age <= LOG_FRESH || age <= limit) count++;
+    }
+    return { working: count > 0, count };
+  }
+
   function splitNames(text) {
     return String(text || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   }
@@ -120,7 +144,17 @@
       ts.first = !ts.running;
       ts.pct = pct; ts.mem = mem;
 
-      if (ts.running && !first) {
+      // 대화 기록이 있는 앱(Claude·Codex)은 기록으로만 "AI 작업"을 봄 — 창을 그리는 CPU, 세션을 열 때 생기는 프로세스는 AI 작업이 아님.
+      // 그래도 AI 가 실행한 명령이 실제로 CPU 를 쓰면(빌드 등) "명령 실행 중".
+      const logs = t.logs && s.aiLogs ? s.aiLogs[t.logs] : undefined;
+      ts.logBased = Array.isArray(logs) && t.mode !== 'alive';
+      ts.aiCount = 0;
+      if (ts.running && ts.logBased) {
+        const lw = logWorking(logs, now);
+        ts.aiCount = lw.count;
+        if (lw.working) ts.lastAct = now;
+        if (!first && lpct >= 1) ts.lastLocal = now;
+      } else if (ts.running && !first) {
         if (t.mode === 'alive' || pct >= st.settings.cpuTh) ts.lastAct = now;
         if (newFound || lpct >= 1) ts.lastLocal = now;
       }
@@ -132,7 +166,9 @@
       const ts = tstate(st, t.id);
       la = Math.max(la, ts.lastAct); ll = Math.max(ll, ts.lastLocal);
       if (!ts.running) ts.status = 'off';
+      else if (ts.logBased && ts.aiCount > 0) ts.status = 'ai';
       else if (now - ts.lastLocal < 30) ts.status = 'cmd';
+      else if (ts.logBased) ts.status = 'idle';
       else if (t.mode === 'alive') ts.status = 'running';
       else if (now - ts.lastAct < 15) ts.status = 'working';
       else ts.status = 'idle';
@@ -203,6 +239,6 @@
     return { mode, idle };
   }
 
-  const api = { createState, ingest, step, view, idleSeconds, startPending, cancelPending, setForce, resetBaseline, splitNames, matches, kindOf };
+  const api = { logWorking, createState, ingest, step, view, idleSeconds, startPending, cancelPending, setForce, resetBaseline, splitNames, matches, kindOf };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.AWLogic = api;
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -275,6 +275,8 @@
   "tok.loading": "Counting your Claude Code logs…",
   "tok.counting": "Counting…",
   "tok.counted": "Counted {0} ago",
-  "tok.empty": "No Claude Code logs yet. Usage appears here after you use Claude Code."
+  "tok.empty": "No Claude Code logs yet. Usage appears here after you use Claude Code.",
+  "agent.ai": "AI working",
+  "agent.aiN": "AI working ({0} chats)"
  }
 }

@@ -219,3 +219,83 @@ test('manySmallChildrenAreNotACommand', () => {
   assert.equal(st.t.claude.status, 'idle');
   assert.equal(r.hold, false);
 });
+
+// ---- AI 대화 기록으로 판정 (Claude Code ~/.claude/projects, Codex ~/.codex/sessions) ----
+// Swift 가 보내는 것: 최근 바뀐 기록 파일마다 "시각이 찍힌 마지막 줄" {t, type, sub, stop, tool}
+const claudeLogs = (over = {}) => base({ auto: false, targets: [{ id: 'claude', label: 'Claude', names: 'claude', mode: 'cpu', logs: 'claude', enabled: true }], ...over });
+const busyRenderer = t => {   // 창을 그리느라 바쁜 Claude (AI 는 쉬는 중)
+  const procs = idleCrowd(t);
+  procs.find(p => p.name === 'Claude Helper (Renderer)').cpuSec = t * 0.3;   // 30%
+  return procs;
+};
+function runLogs(st, t0, n, entriesAt) {
+  let r;
+  for (let i = 0; i < n; i++) {
+    const t = t0 + i;
+    L.ingest(st, { procs: busyRenderer(t - t0), userIdleSec: 9999, aiLogs: { claude: entriesAt(t) } }, t);
+    r = L.step(st, t);
+  }
+  return r;
+}
+
+test('logWorkingRules', () => {
+  const now = 10000;
+  const w = (e) => L.logWorking([e], now).working;
+  assert.equal(w({ t: now - 5, type: 'attachment' }), true);                                   // 방금 쓴 줄
+  assert.equal(w({ t: now - 5, type: 'system', sub: 'stop_hook_summary' }), false);            // 턴 끝
+  assert.equal(w({ t: now - 5, type: 'assistant', stop: 'end_turn' }), false);                 // 답 끝
+  assert.equal(w({ t: now - 300, type: 'api-request' }), true);                                // 모델이 길게 생각
+  assert.equal(w({ t: now - 1000, type: 'api-request' }), false);                              // 15분 넘으면 멈춘 것
+  assert.equal(w({ t: now - 600, type: 'assistant', stop: 'tool_use', tool: true }), true);    // 도구 실행 중
+  assert.equal(w({ t: now - 2000, type: 'assistant', stop: 'tool_use', tool: true }), false);
+  assert.equal(w({ t: now - 300, type: 'user' }), false);                                      // 2분 넘게 아무것도 없음
+  assert.equal(w({ t: now - 5, type: 'event_msg', sub: 'task_complete' }), false);             // Codex 턴 끝
+  assert.equal(L.logWorking([{ t: now - 5, type: 'system', sub: 'stop_hook_summary' }, { t: now - 2, type: 'api-request' }], now).count, 1);
+});
+
+test('claudeOpenButNoAiWorkIsIdle', () => {
+  // 렌더러가 30%를 써도, 대화 기록상 모든 세션이 턴을 마쳤으면 쉬는 중
+  const st = L.createState(claudeLogs());
+  const r = runLogs(st, 1000, 200, () => [{ t: 900, type: 'system', sub: 'stop_hook_summary' }, { t: 950, type: 'assistant', stop: 'end_turn' }]);
+  assert.equal(st.t.claude.status, 'idle');
+  assert.equal(r.hold, false);
+});
+
+test('claudeAiWorkingFromLogs', () => {
+  const st = L.createState(claudeLogs());
+  // 한 세션이 모델 응답을 기다리는 중(3분째), 다른 세션은 쉼
+  const r = runLogs(st, 1000, 5, t => [{ t: t - 180, type: 'api-request' }, { t: 900, type: 'system', sub: 'stop_hook_summary' }]);
+  assert.equal(st.t.claude.status, 'ai');
+  assert.equal(r.hold, true);
+  assert.deepEqual(st.activeLabels, ['Claude']);
+});
+
+test('claudeTurnEndThenGraceThenIdle', () => {
+  const st = L.createState(claudeLogs());
+  runLogs(st, 1000, 30, t => [{ t: t - 1, type: 'assistant', stop: 'tool_use', tool: true }]);   // 30초 일함
+  let r = runLogs(st, 1030, 60, () => [{ t: 1030, type: 'system', sub: 'stop_hook_summary' }]);  // 턴 끝
+  assert.equal(st.t.claude.status, 'idle');
+  assert.equal(r.hold, true);                                  // 유예 2분 동안은 깨워 둠
+  r = runLogs(st, 1090, 120, () => [{ t: 1030, type: 'system', sub: 'stop_hook_summary' }]);
+  assert.equal(r.hold, false);
+});
+
+test('targetWithoutLogsStillUsesCpu', () => {
+  // aiLogs 에 그 앱 기록이 없으면(예: Cursor) 예전처럼 CPU 로 판정
+  const st = L.createState(base({ auto: false, targets: [{ id: 'cursor', label: 'Cursor', names: 'cursor', mode: 'cpu', enabled: true }] }));
+  let c = 0, r;
+  for (let t = 1000; t < 1010; t++) {
+    c += 0.3;
+    L.ingest(st, { procs: [{ pid: 1, ppid: 0, name: 'Cursor', cpuSec: c, mem: 1 }], userIdleSec: 9999, aiLogs: { claude: [] } }, t);
+    r = L.step(st, t);
+  }
+  assert.equal(st.t.cursor.status, 'working');
+  assert.equal(r.hold, true);
+});
+
+test('claudeNotRunningIgnoresLogs', () => {
+  const st = L.createState(claudeLogs());
+  L.ingest(st, { procs: [], userIdleSec: 9999, aiLogs: { claude: [{ t: 999, type: 'api-request' }] } }, 1000);
+  assert.equal(st.t.claude.status, 'off');
+  assert.equal(L.step(st, 1000).hold, false);
+});

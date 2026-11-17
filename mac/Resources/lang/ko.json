@@ -275,6 +275,8 @@
   "tok.loading": "Claude Code 기록을 세고 있어요…",
   "tok.counting": "세는 중…",
   "tok.counted": "{0} 전에 셈",
-  "tok.empty": "아직 Claude Code 기록이 없어요. Claude Code를 쓰면 여기에 쌓여요."
+  "tok.empty": "아직 Claude Code 기록이 없어요. Claude Code를 쓰면 여기에 쌓여요.",
+  "agent.ai": "AI 작업 중",
+  "agent.aiN": "AI 작업 중 (대화 {0}개)"
  }
 }

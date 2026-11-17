@@ -12,6 +12,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
     private let power = Power()
     private let fan = FanControl()
     private let tokens = TokenScanner()
+    private let aiLogs = AILogs()
+    private var lastState = ""
     private var slowTick = 0
     private var slow: [String: Any] = [:]
     private var statusItem: NSStatusItem!
@@ -62,12 +64,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         if !FileManager.default.fileExists(atPath: settingsURL.path) { startHidden = false }   // 처음 실행은 항상 보여 줌
 
         UNUserNotificationCenter.current().delegate = self
+        // 메뉴 막대 아이콘이 처음 생길 때는 오른쪽(시계 가까이)에 둠.
+        // 새 아이콘은 보통 맨 왼쪽에 생겨서, 노치 뒤로 밀리거나 Ice·Bartender 같은 정리 앱의 "숨김" 칸에 들어가 안 보임.
+        // 위치를 한 번 정하면(직접 ⌘-끌기 포함) macOS 가 같은 키에 기억하므로 그다음부터는 손대지 않음.
+        let posKey = "NSStatusItem Preferred Position AIWatchdog"
+        if UserDefaults.standard.object(forKey: posKey) == nil { UserDefaults.standard.set(200, forKey: posKey) }
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem.autosaveName = "AIWatchdog"
         statusItem.button?.image = Self.dot(nil)
         statusItem.button?.toolTip = "AI Watchdog"
         statusItem.button?.target = self
         statusItem.button?.action = #selector(statusClicked)
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        // 확인용: 메뉴 막대 아이콘이 화면 어디에 있는지 debug.log 에 남김 (노치·메뉴 막대 정리 앱에 가려지는지)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+            guard let self, let w = self.statusItem.button?.window else { self?.debugLog("statusItem: no window"); return }
+            self.debugLog("statusItem: frame=\(w.frame) visible=\(self.statusItem.isVisible) occlusionVisible=\(w.occlusionState.contains(.visible)) screen=\(w.screen?.localizedName ?? "nil")")
+        }
 
         miOpen = menu.addItem(withTitle: "Open", action: #selector(openWindow), keyEquivalent: "")
         menu.addItem(.separator())
@@ -160,6 +173,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         s["fans"] = Sensors.fans()
         s["temps"] = Sensors.temperatures()
         s["fanHelper"] = fan.status
+        s["aiLogs"] = aiLogs.snapshot()      // AI 대화 기록의 마지막 줄들 (Claude·Codex)
         if panel.isVisible {
             if slowTick % 5 == 0 {      // 배터리·저장 공간·네트워크 이름은 5초마다
                 slow["battery"] = Sensors.battery() ?? NSNull()
@@ -208,6 +222,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKScriptMessageHandler
         case "log":
             appendSession(m)
         case "status":
+            let state = m["state"] as? String ?? ""
+            if state != lastState { debugLog("state: \(state) \(m["tip"] as? String ?? "")"); lastState = state }   // 판정 바뀐 때만 기록
             statusItem.button?.image = Self.dot(m["state"] as? String)
             statusItem.button?.toolTip = m["tip"] as? String
         case "size":

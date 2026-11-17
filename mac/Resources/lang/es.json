@@ -275,6 +275,8 @@
   "tok.loading": "Contando los registros de Claude Code…",
   "tok.counting": "Contando…",
   "tok.counted": "Contado hace {0}",
-  "tok.empty": "Aún no hay registros de Claude Code. Aparecerán aquí cuando lo uses."
+  "tok.empty": "Aún no hay registros de Claude Code. Aparecerán aquí cuando lo uses.",
+  "agent.ai": "IA trabajando",
+  "agent.aiN": "IA trabajando ({0} chats)"
  }
 }

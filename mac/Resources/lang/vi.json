@@ -275,6 +275,8 @@
   "tok.loading": "Đang đếm nhật ký Claude Code…",
   "tok.counting": "Đang đếm…",
   "tok.counted": "Đã đếm {0} trước",
-  "tok.empty": "Chưa có nhật ký Claude Code. Khi bạn dùng Claude Code, số liệu sẽ hiện ở đây."
+  "tok.empty": "Chưa có nhật ký Claude Code. Khi bạn dùng Claude Code, số liệu sẽ hiện ở đây.",
+  "agent.ai": "AI đang làm việc",
+  "agent.aiN": "AI đang làm việc ({0} cuộc trò chuyện)"
  }
 }

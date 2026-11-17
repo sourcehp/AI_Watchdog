@@ -275,6 +275,8 @@
   "tok.loading": "กำลังนับบันทึก Claude Code…",
   "tok.counting": "กำลังนับ…",
   "tok.counted": "นับเมื่อ {0} ที่แล้ว",
-  "tok.empty": "ยังไม่มีบันทึก Claude Code เมื่อใช้ Claude Code ข้อมูลจะแสดงที่นี่"
+  "tok.empty": "ยังไม่มีบันทึก Claude Code เมื่อใช้ Claude Code ข้อมูลจะแสดงที่นี่",
+  "agent.ai": "AI กำลังทำงาน",
+  "agent.aiN": "AI กำลังทำงาน ({0} แชท)"
  }
 }
